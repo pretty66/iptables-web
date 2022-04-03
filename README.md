@@ -1,4 +1,4 @@
-# iptables-web iptables管理系统
+# iptables管理程序
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/pretty66/iptables-web)](https://github.com/pretty66/iptables-web/blob/master/go.mod)
 ### iptables-web是一个轻量级的iptables web管理界面程序，支持二进制文件直接运行及docker快速部署安装；整个程序打包完成后只有一个二进制文件，适合日常运维使用。
 ![web](./docs/iptables-web.png)
