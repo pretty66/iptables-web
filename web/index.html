@@ -19,7 +19,6 @@
 
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="https://www.layuicdn.com/layui/css/layui.css"/>
@@ -89,8 +88,6 @@
         }
     </style>
 </head>
-
-
 <body>
 <ul class="layui-nav layui-bg-blue" style="text-align:center;">
     <li class="layui-nav-item">
@@ -109,11 +106,9 @@
             </ul>
         </div>
         <div id="table-body">
-
         </div>
     </div>
 </div>
-
 <!--目录-->
 <div id="nav-dir-hide">
     <i class="layui-icon layui-icon-triangle-r" style="font-size: 20px;color:#1E9FFF"></i>
@@ -164,7 +159,8 @@
         导入iptables规则
     </button>
     <br>
-    <a href="https://blog.xujianqq.com.cn/archives/61" target="_blank" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">iptables帮助文档</a>
+    <a href="https://blog.xujianqq.com.cn/archives/61" target="_blank"
+       class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">iptables帮助文档</a>
 </div>
 <!--复制、导出-->
 <div class="modal-footer" style="display:none;">
@@ -172,27 +168,21 @@
     <a onfocus="this.blur();" download="code.txt" id="createInvote" class="ipt-todo hide">code</a>
 </div>
 <textarea id="copy" style="display:none;"></textarea>
-
-
 <script src="https://www.layuicdn.com/layui/layui.js"></script>
 <!--您的Layui代码start-->
 <script type="text/javascript">
     layui.use(['layer', 'table', 'element', 'code'], function () {
         var layer = layui.layer //弹层
-            ,
-            table = layui.table //表格
-            ,
-            element = layui.element; //元素操作 等等...
+            , table = layui.table //表格
+            , element = layui.element; //元素操作 等等...
         var $ = layui.$;
         $.get("/version", function (res) {
             $('.ipc-version').html(res.data)
         });
-
         let dirObj = $('#nav-dir');
         let dirHideObj = $('#nav-dir-hide');
         // 右侧
         let globalObj = $('#global-func');
-
         function navDirStatus(display) {
             dirObj.css('display', display);
             dirHideObj.css('display', {none: 'block', block: 'none'}[display])
@@ -247,7 +237,6 @@
                 }
             }
         });
-
 
         let iptables = {
             listRule: (table = 'filter', chain = '', done) => {
@@ -641,7 +630,7 @@
                     // loadListRule(tableName, '', false)
                     if (res.data) {
                         let html = '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>'
-                        layer.alert(html.replace('#code#', res.data), {title:'命令执行成功'})
+                        layer.alert(html.replace('#code#', res.data), {title: '命令执行成功'})
                     } else {
                         layer.msg('命令执行成功')
                     }
@@ -796,5 +785,4 @@
     }
 </script>
 </body>
-
 </html>

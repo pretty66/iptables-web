@@ -69,7 +69,7 @@ func main() {
 		panic("Only Linux system is supported")
 	}
 
-	ipc, err := iptables.New()
+	ipc, err := iptables.NewIPV4()
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func main() {
 	}
 }
 
-func initRoute(mux *HTTPMux, ipc *iptables.IptablesCMD) {
+func initRoute(mux *HTTPMux, ipc iptables.Iptableser) {
 	mux.Use(auth)
 	mux.HandleFunc("/version", func(w http.ResponseWriter, req *http.Request) {
 		v, err := ipc.Version()

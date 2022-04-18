@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/pretty66/iptables-web/utils"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -31,6 +30,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/pretty66/iptables-web/utils"
 )
 
 type Protocol byte
@@ -40,7 +41,7 @@ const (
 	ProtocolIPv6
 )
 
-type IptablesCMD struct {
+type IptablesV4CMD struct {
 	binary        string
 	saveBinary    string
 	restoreBinary string
@@ -48,10 +49,10 @@ type IptablesCMD struct {
 	exec          exec.Cmd
 }
 
-type option func(*IptablesCMD)
+type option func(*IptablesV4CMD)
 
-func New(opt ...option) (*IptablesCMD, error) {
-	ipc := &IptablesCMD{}
+func NewIPV4(opt ...option) (*IptablesV4CMD, error) {
+	ipc := &IptablesV4CMD{}
 	for _, fn := range opt {
 		fn(ipc)
 	}
@@ -71,32 +72,34 @@ func New(opt ...option) (*IptablesCMD, error) {
 }
 
 func WithProtocol(protocol Protocol) option {
-	return func(ic *IptablesCMD) {
+	return func(ic *IptablesV4CMD) {
 		ic.protocol = protocol
 	}
 }
 
 func WithBinary(cmd string) option {
-	return func(ic *IptablesCMD) {
+	return func(ic *IptablesV4CMD) {
 		ic.binary = cmd
 	}
 }
+
 func WithSaveBinary(cmd string) option {
-	return func(ic *IptablesCMD) {
+	return func(ic *IptablesV4CMD) {
 		ic.saveBinary = cmd
 	}
 }
+
 func WithRestoreBinary(cmd string) option {
-	return func(ic *IptablesCMD) {
+	return func(ic *IptablesV4CMD) {
 		ic.restoreBinary = cmd
 	}
 }
 
-func (i *IptablesCMD) Version() (string, error) {
+func (i *IptablesV4CMD) Version() (string, error) {
 	return i.iptables("--version")
 }
 
-func (i *IptablesCMD) ListRule(table, chain string) (map[string][]TableList, error) {
+func (i *IptablesV4CMD) ListRule(table, chain string) (map[string][]TableList, error) {
 	if len(table) == 0 {
 		table = "filter"
 	}
@@ -152,7 +155,7 @@ func (i *IptablesCMD) ListRule(table, chain string) (map[string][]TableList, err
 	return tl, nil
 }
 
-func (i *IptablesCMD) FlushRule(table, chain string) error {
+func (i *IptablesV4CMD) FlushRule(table, chain string) error {
 	var err error
 	if len(table) == 0 && len(chain) == 0 {
 		_, err = i.iptables("-t", "raw", "-F")
@@ -174,7 +177,7 @@ func (i *IptablesCMD) FlushRule(table, chain string) error {
 	return err
 }
 
-func (i *IptablesCMD) FlushMetrics(table, chain, id string) error {
+func (i *IptablesV4CMD) FlushMetrics(table, chain, id string) error {
 	var err error
 	if len(id) > 0 {
 		if len(table) == 0 || len(chain) == 0 {
@@ -204,7 +207,7 @@ func (i *IptablesCMD) FlushMetrics(table, chain, id string) error {
 	return err
 }
 
-func (i *IptablesCMD) DeleteRule(table, chain, id string) error {
+func (i *IptablesV4CMD) DeleteRule(table, chain, id string) error {
 	if len(table) == 0 || len(chain) == 0 || len(id) == 0 {
 		return fmt.Errorf("DeleteRule args error. table:%s chain:%s id:%s", table, chain, id)
 	}
@@ -212,7 +215,7 @@ func (i *IptablesCMD) DeleteRule(table, chain, id string) error {
 	return err
 }
 
-func (i *IptablesCMD) ListExec(table, chain string) (string, error) {
+func (i *IptablesV4CMD) ListExec(table, chain string) (string, error) {
 	var str string
 	var err error
 	if len(chain) == 0 {
@@ -227,7 +230,7 @@ func (i *IptablesCMD) ListExec(table, chain string) (string, error) {
 	return str, err
 }
 
-func (i *IptablesCMD) Exec(param ...string) (string, error) {
+func (i *IptablesV4CMD) Exec(param ...string) (string, error) {
 	var args []string
 	for k := range param {
 		param[k] = strings.TrimSpace(param[k])
@@ -239,11 +242,11 @@ func (i *IptablesCMD) Exec(param ...string) (string, error) {
 	return i.iptables(args...)
 }
 
-func (i *IptablesCMD) GetRuleInfo(table, chain, id string) (string, error) {
+func (i *IptablesV4CMD) GetRuleInfo(table, chain, id string) (string, error) {
 	if len(table) == 0 || len(chain) == 0 || len(id) == 0 {
 		return "", fmt.Errorf("GetRuleInfo args error. table:%s chain:%s id:%s", table, chain, id)
 	}
-	//s, err := i.iptablesSave(fmt.Sprintf("-t %s | grep %s", table, " "+chain+" "))
+	// s, err := i.iptablesSave(fmt.Sprintf("-t %s | grep %s", table, " "+chain+" "))
 	s, err := i.iptablesSave(fmt.Sprintf("-t %s | grep ' %s '", table, chain))
 	if err != nil {
 		return "", err
@@ -256,7 +259,7 @@ func (i *IptablesCMD) GetRuleInfo(table, chain, id string) (string, error) {
 	return list[idint-1], nil
 }
 
-func (i *IptablesCMD) FlushEmptyCustomChain() error {
+func (i *IptablesV4CMD) FlushEmptyCustomChain() error {
 	_, err := i.iptables("-t", "raw", "-X")
 	_, err = i.iptables("-t", "mangle", "-X")
 	_, err = i.iptables("-t", "nat", "-X")
@@ -264,7 +267,7 @@ func (i *IptablesCMD) FlushEmptyCustomChain() error {
 	return err
 }
 
-func (i *IptablesCMD) Export(table, chain string) (string, error) {
+func (i *IptablesV4CMD) Export(table, chain string) (string, error) {
 	var args []string
 	if len(table) > 0 {
 		args = append(args, table)
@@ -275,7 +278,7 @@ func (i *IptablesCMD) Export(table, chain string) (string, error) {
 	return i.iptablesSave(args...)
 }
 
-func (i *IptablesCMD) Import(rule string) error {
+func (i *IptablesV4CMD) Import(rule string) error {
 	if len(rule) == 0 {
 		return nil
 	}
@@ -289,7 +292,7 @@ func (i *IptablesCMD) Import(rule string) error {
 	return err
 }
 
-func (i *IptablesCMD) iptables(args ...string) (string, error) {
+func (i *IptablesV4CMD) iptables(args ...string) (string, error) {
 	var outBuf, errBuf bytes.Buffer
 	cmd := exec.Command(i.binary, args...)
 	cmd.Stdout = &outBuf
@@ -301,7 +304,7 @@ func (i *IptablesCMD) iptables(args ...string) (string, error) {
 	return strings.TrimSpace(outBuf.String()), nil
 }
 
-func (i *IptablesCMD) iptablesSave(args ...string) (string, error) {
+func (i *IptablesV4CMD) iptablesSave(args ...string) (string, error) {
 	var outBuf, errBuf bytes.Buffer
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("%s %s", i.saveBinary, strings.Join(args, " ")))
 	cmd.Stdout = &outBuf
@@ -314,7 +317,7 @@ func (i *IptablesCMD) iptablesSave(args ...string) (string, error) {
 	return strings.TrimSpace(outBuf.String()), nil
 }
 
-func (i *IptablesCMD) iptablesRestore(fileName string) (string, error) {
+func (i *IptablesV4CMD) iptablesRestore(fileName string) (string, error) {
 	var outBuf, errBuf bytes.Buffer
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("%s < %s", i.restoreBinary, fileName))
 	cmd.Stdout = &outBuf
