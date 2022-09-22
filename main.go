@@ -24,12 +24,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/pretty66/iptables-web/pkg/iptables"
-	"github.com/pretty66/iptables-web/utils"
+	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"runtime"
 	"time"
+
+	"github.com/pretty66/iptables-web/pkg/iptables"
+	"github.com/pretty66/iptables-web/utils"
 )
 
 //go:embed web/index.html
@@ -43,12 +46,14 @@ var (
 )
 
 var (
-	username string // IPT_WEB_USERNAME
-	password string // IPT_WEB_PASSWORD
-	address  string // IPT_WEB_ADDRESS
+	username   string // IPT_WEB_USERNAME
+	password   string // IPT_WEB_PASSWORD
+	address    string // IPT_WEB_ADDRESS
+	verifyArgs *regexp.Regexp
 )
 
 func init() {
+	log.SetFlags(log.Lshortfile)
 	flag.StringVar(&username, "u", "admin", "login username")
 	flag.StringVar(&password, "p", "admin", "login password")
 	flag.StringVar(&address, "a", ":10001", "http listen address")
@@ -62,6 +67,8 @@ func init() {
 	if v := os.Getenv("IPT_WEB_ADDRESS"); len(v) > 0 {
 		address = v
 	}
+	// 验证表名链名，防止注入
+	verifyArgs, _ = regexp.Compile(`^[0-9A-z-_]+$`)
 }
 
 func main() {
@@ -92,6 +99,7 @@ func main() {
 
 func initRoute(mux *HTTPMux, ipc iptables.Iptableser) {
 	mux.Use(auth)
+	mux.Use(argsFilter)
 	mux.HandleFunc("/version", func(w http.ResponseWriter, req *http.Request) {
 		v, err := ipc.Version()
 		utils.Output(w, err, v)
@@ -189,6 +197,22 @@ func auth(handler http.Handler) http.Handler {
 		}
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
+}
+
+func argsFilter(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		table := r.FormValue("table")
+		if len(table) > 0 && !verifyArgs.MatchString(table) {
+			http.Error(w, "参数错误!", 200)
+			return
+		}
+		chain := r.FormValue("chain")
+		if len(chain) > 0 && !verifyArgs.MatchString(chain) {
+			http.Error(w, "参数错误!", 200)
+			return
+		}
+		handler.ServeHTTP(w, r)
 	})
 }
 

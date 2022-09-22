@@ -21,8 +21,9 @@ package iptables
 
 import (
 	"fmt"
-	"github.com/pretty66/iptables-web/utils"
 	"regexp"
+
+	"github.com/pretty66/iptables-web/utils"
 )
 
 type SystemTitle struct {
@@ -73,9 +74,11 @@ type TableList interface {
 	String() string
 }
 
-var systemTitleRegex *regexp.Regexp
-var customTitleRegex *regexp.Regexp
-var columnRegex *regexp.Regexp
+var (
+	systemTitleRegex *regexp.Regexp
+	customTitleRegex *regexp.Regexp
+	columnRegex      *regexp.Regexp
+)
 
 func init() {
 	var err error
@@ -92,6 +95,7 @@ func init() {
 		panic(err)
 	}
 }
+
 func parseSystemTitle(ts string) (out SystemTitle, err error) {
 	res := systemTitleRegex.FindStringSubmatch(ts)
 	if len(res) != 5 {
@@ -104,6 +108,7 @@ func parseSystemTitle(ts string) (out SystemTitle, err error) {
 	out.Bytes = res[4]
 	return
 }
+
 func parseCustomTitle(ts string) (out CustomTitle, err error) {
 	res := customTitleRegex.FindStringSubmatch(ts)
 	if len(res) != 3 {

@@ -3,9 +3,7 @@ WORKDIR /
 COPY . .
 RUN make
 
-FROM ubuntu:latest
-
-RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+FROM harbor.oneitfarm.com/bifrost/nettools:v1.1
 
 RUN apt-get update -y && \
     apt-get install iptables -y
