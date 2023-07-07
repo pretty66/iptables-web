@@ -27,7 +27,7 @@ docker run -d \
 
 ### 直接安装
 ```shell
-git clone github.com/pretty66/iptables-web
+git clone https://github.com/pretty66/iptables-web.git
 cd iptables-web
 make
 # 直接运行
