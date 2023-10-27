@@ -1,3 +1,6 @@
+//go:build linux
+// +build linux
+
 /*
  *
  *  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -16,11 +19,10 @@
  *  * limitations under the License.
  *
  */
-
 package main
 
 import (
-	_ "embed"
+	"embed"
 	"errors"
 	"flag"
 	"fmt"
@@ -37,6 +39,9 @@ import (
 
 //go:embed web/index.html
 var webIndex []byte
+
+//go:embed web/*
+var staticFiles embed.FS
 
 // BuildDate: Binary file compilation time
 // BuildVersion: Binary compiled GIT version
@@ -182,10 +187,12 @@ func initRoute(mux *HTTPMux, ipc iptables.Iptableser) {
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/html;charset-utf8;")
 		_, _ = w.Write(webIndex)
 	})
+	mux.Handle("/web/", http.FileServer(http.FS(staticFiles)))
 }
 
 func auth(handler http.Handler) http.Handler {

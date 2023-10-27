@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -283,7 +282,7 @@ func (i *IptablesV4CMD) Import(rule string) error {
 		return nil
 	}
 	fileName := "/tmp/iptable.rule"
-	err := ioutil.WriteFile(fileName, []byte(rule), fs.ModePerm)
+	err := os.WriteFile(fileName, []byte(rule), fs.ModePerm)
 	if err != nil {
 		return fmt.Errorf("Import rule error. err:%v", err)
 	}
