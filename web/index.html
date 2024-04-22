@@ -147,6 +147,10 @@
         清零当前表计数
     </button>
     <br>
+    <button id="self-iptables" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
+        查看当前表规则
+    </button>
+    <br>
     <button id="exec-iptables" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
         执行iptables命令
     </button>
@@ -635,6 +639,13 @@
                         layer.msg('命令执行成功')
                     }
                 })
+            })
+        })
+        $('#self-iptables').click(function () {
+            let tableName = $('.layui-this').html();
+            iptables.listExec(tableName, '', function (res) {
+                let html = '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>'
+                layer.alert(html.replace('#code#', res.data), {title: '表: ' + tableName})
             })
         })
     });

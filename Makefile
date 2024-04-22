@@ -23,8 +23,8 @@ run:
 	go run main.go
 
 images:
-	docker build -t pretty66/iptables-web:1.1.1 .
-	docker push pretty66/iptables-web:1.1.1
+	docker build -t pretty66/iptables-web:1.1.2 -t pretty66/iptables-web:latest .
+	docker push
 
 clean:
 	rm -f $(BIN_FILE)
