@@ -90,7 +90,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	columnRegex, err = regexp.Compile(`(\d+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+([0-9\.\/]+)\s*(.*)`)
+	columnRegex, err = regexp.Compile(`(\d+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+(.+?)\s+([0-9A-Za-z:\.\/-]+)\s*(.*)`)
 	if err != nil {
 		panic(err)
 	}
