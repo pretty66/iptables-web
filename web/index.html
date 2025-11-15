@@ -106,7 +106,7 @@
   <body>
     <ul class="layui-nav layui-bg-blue" style="text-align: center">
       <li class="layui-nav-item">
-        iptables 管理平台
+        <span class="ipc-title">iptables 管理平台</span>
         <span class="ipc-version"></span>
       </li>
     </ul>
@@ -115,6 +115,13 @@
         ><input type="radio" name="protocol" value="ipv4" checked />IPv4</label
       >
       <label><input type="radio" name="protocol" value="ipv6" />IPv6</label>
+      <button
+        id="language-toggle"
+        class="layui-btn layui-btn-sm layui-btn-primary"
+        style="margin-left: 12px"
+      >
+        English
+      </button>
     </div>
     <div class="layui-container">
       <div class="layui-row">
@@ -151,7 +158,9 @@
         background-color: #fff;
       "
     >
-      <div class="layui-layer-title" style="cursor: move">目录</div>
+      <div class="layui-layer-title" id="dir-title" style="cursor: move">
+        目录
+      </div>
       <div style="padding: 10px">
         <ul
           class="site-dir layui-layer-wrap"
@@ -226,6 +235,13 @@
       >
         导入iptables规则
       </button>
+      <br />
+      <button
+        id="open-iptables-doc"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
+        iptables命令文档
+      </button>
       <!--    <br>-->
       <!--    <a href="https://blog.xujianqq.com.cn/archives/61" target="_blank"-->
       <!--       class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">iptables帮助文档</a>-->
@@ -252,6 +268,191 @@
     <!--您的Layui代码start-->
     <script type="text/javascript">
       let currentProtocol = "ipv4";
+      const languageKey = "iptables_lang";
+      const storedLang = localStorage.getItem(languageKey);
+      const browserLang = (navigator.language || "zh")
+        .toLowerCase()
+        .startsWith("zh")
+        ? "zh"
+        : "en";
+      let currentLang = storedLang || browserLang;
+      const i18n = {
+        zh: {
+          title: "iptables 管理平台",
+          directoryTitle: "目录",
+          chainLabel: "链",
+          defaultPolicy: "默认策略",
+          packets: "经过的包数量",
+          bytes: "字节数",
+          references: "被引用数量",
+          tableLabel: "表",
+          tableWord: "表",
+          chainWord: "链",
+          clearAllRule: "清空所有表规则",
+          clearCurrentRule: "清空当前表规则",
+          clearEmptyChain: "清空自定义空链",
+          clearAllMetrics: "清零所有表计数",
+          clearCurrentMetrics: "清零当前表计数",
+          clearChain: "清空规则",
+          viewTable: "查看当前表规则",
+          execCmd: "执行iptables命令",
+          exportRule: "导出iptables规则",
+          importRule: "导入iptables规则",
+          doc: "iptables命令文档",
+          protocolLabel: "协议",
+          tabRaw: "raw",
+          tabMangle: "mangle",
+          tabNat: "nat",
+          tabFilter: "filter",
+          nativeChain: "原生链",
+          customChain: "自定义链",
+          insert: "插入",
+          append: "添加",
+          zero: "清零",
+          zeroCounters: "清零计数",
+          delete: "删除",
+          refresh: "刷新",
+          refreshSuccess: "刷新成功",
+          viewCmd: "查看命令",
+          warning: "提示",
+          confirm: "确认",
+          cancel: "取消",
+          insertRuleTitle: "插入规则",
+          appendRuleTitle: "添加规则",
+          rulePlaceholder: "请输入规则",
+          execCommandTitleTpl: "执行 {cmd} 命令",
+          inputCommand: "输入命令",
+          commandSuccess: "命令执行成功",
+          importPromptTpl: "粘贴 {cmd} 规则",
+          importSuccess: "导入iptables规则成功！",
+          flushRuleSuccess: "清除规则成功！",
+          flushMetricsSuccess: "清除统计数据成功！",
+          clearEmptySuccess: "清空自定义空链成功！",
+          insertSuccess: "插入规则成功！",
+          appendSuccess: "添加规则成功！",
+          updateSuccess: "修改规则成功！",
+          copySuccess: "复制成功，可直接粘贴至文件！",
+          exportDialogTitle: "全部规则命令",
+          btnCopy: "复制",
+          btnDownload: "导出",
+          btnOk: "确定",
+          clearConfirmPrefix: "确认清除",
+          allRulesSuffix: "所有规则？",
+          chainRulesSuffix: " 链的所有规则？",
+          allMetricsSuffix: "所有统计数据？",
+          ruleMetricsPrefix: "第 ",
+          ruleMetricsSuffix: " 条规则的统计数据？",
+          ruleNumberPrefix: "第",
+          ruleNumberSuffix: "条规则",
+          clearEmptyPrompt: "确认清除用户自定义的所有空链？",
+        },
+        en: {
+          title: "iptables Web Console",
+          directoryTitle: "Directory",
+          chainLabel: "Chain",
+          defaultPolicy: "Default policy",
+          packets: "Packets",
+          bytes: "Bytes",
+          references: "References",
+          tableLabel: "Table",
+          tableWord: "table",
+          chainWord: "chain",
+          clearAllRule: "Flush All Tables",
+          clearCurrentRule: "Flush Current Table",
+          clearEmptyChain: "Drop Empty Custom Chains",
+          clearAllMetrics: "Zero All Counters",
+          clearCurrentMetrics: "Zero Current Table",
+          clearChain: "Flush Rules",
+          viewTable: "View Current Table",
+          execCmd: "Run iptables Command",
+          exportRule: "Export iptables Rules",
+          importRule: "Import iptables Rules",
+          doc: "iptables Reference",
+          protocolLabel: "Protocol",
+          tabRaw: "raw",
+          tabMangle: "mangle",
+          tabNat: "nat",
+          tabFilter: "filter",
+          nativeChain: "System Chains",
+          customChain: "Custom Chains",
+          insert: "Insert",
+          append: "Append",
+          zero: "Zero",
+          zeroCounters: "Zero Counters",
+          delete: "Delete",
+          refresh: "Refresh",
+          refreshSuccess: "Refreshed",
+          viewCmd: "View Command",
+          warning: "Warning",
+          confirm: "OK",
+          cancel: "Cancel",
+          insertRuleTitle: "Insert Rule",
+          appendRuleTitle: "Append Rule",
+          rulePlaceholder: "Enter rule arguments",
+          execCommandTitleTpl: "Run {cmd} command",
+          inputCommand: "Command",
+          commandSuccess: "Command executed successfully",
+          importPromptTpl: "Paste {cmd} rules",
+          importSuccess: "Rules imported successfully!",
+          flushRuleSuccess: "Rules cleared successfully!",
+          flushMetricsSuccess: "Counters reset successfully!",
+          clearEmptySuccess: "Empty custom chains removed!",
+          insertSuccess: "Rule inserted successfully!",
+          appendSuccess: "Rule appended successfully!",
+          updateSuccess: "Rule updated successfully!",
+          copySuccess: "Copied! You can paste it into a file.",
+          exportDialogTitle: "All rules",
+          btnCopy: "Copy",
+          btnDownload: "Download",
+          btnOk: "OK",
+          clearConfirmPrefix: "Confirm to clear",
+          allRulesSuffix: "all rules?",
+          chainRulesSuffix: " chain rules?",
+          allMetricsSuffix: "all counters?",
+          ruleMetricsPrefix: "Rule #",
+          ruleMetricsSuffix: " counters?",
+          ruleNumberPrefix: "Rule #",
+          ruleNumberSuffix: "",
+          clearEmptyPrompt: "Clear all empty custom chains?",
+        },
+      };
+      function setLanguage(lang, options = {}) {
+        currentLang = lang;
+        localStorage.setItem(languageKey, lang);
+        const langPack = i18n[lang];
+        const titleEl = document.querySelector(".ipc-title");
+        if (titleEl) {
+          titleEl.innerText = langPack.title;
+        }
+        const dirTitle = document.querySelector("#dir-title");
+        if (dirTitle) {
+          dirTitle.innerText = langPack.directoryTitle;
+        }
+        const labels = [
+          ["#clear-all-rule", "clearAllRule"],
+          ["#clear-current-table-rule", "clearCurrentRule"],
+          ["#clear-all-empty-chain", "clearEmptyChain"],
+          ["#clear-all-metrics", "clearAllMetrics"],
+          ["#clear-current-table-metrics", "clearCurrentMetrics"],
+          ["#self-iptables", "viewTable"],
+          ["#exec-iptables", "execCmd"],
+          ["#export-all-rule", "exportRule"],
+          ["#import-all-rule", "importRule"],
+          ["#open-iptables-doc", "doc"],
+        ];
+        labels.forEach(([selector, key]) => {
+          const el = document.querySelector(selector);
+          if (el) el.innerText = langPack[key];
+        });
+        const tabs = document.querySelectorAll(".iptables-table li");
+        const tabKeys = ["tabRaw", "tabMangle", "tabNat", "tabFilter"];
+        tabs.forEach((tab, idx) => (tab.innerText = langPack[tabKeys[idx]]));
+        document.querySelector("#language-toggle").innerText =
+          lang === "zh" ? "English" : "中文";
+        if (!options.silent && typeof loadListRule === "function") {
+          loadListRule(currentTableName(), "", false);
+        }
+      }
       function currentCommandBinary() {
         return currentProtocol === "ipv6" ? "ip6tables" : "iptables";
       }
@@ -280,6 +481,7 @@
         let dirHideObj = $("#nav-dir-hide");
         // 右侧
         let globalObj = $("#global-func");
+        setLanguage(currentLang, { silent: true });
         function navDirStatus(display) {
           dirObj.css("display", display);
           dirHideObj.css("display", { none: "block", block: "none" }[display]);
@@ -350,16 +552,17 @@
             );
           },
           flushRule: (table = "filter", chain = "", done) => {
-            let msg = "确认清除";
-            if (!!table) {
-              msg += " " + table + " 表";
+            const lang = i18n[currentLang];
+            const parts = [lang.clearConfirmPrefix];
+            if (table) {
+              parts.push(`${table} ${lang.tableWord}`);
             }
             if (!chain) {
-              msg += "所有规则？";
+              parts.push(lang.allRulesSuffix);
             } else {
-              msg += " " + chain + " 链所有规则？";
+              parts.push(`${chain}${lang.chainRulesSuffix}`);
             }
-            layer.confirm(msg, function () {
+            layer.confirm(parts.join(" "), function () {
               $.post(
                 "/flushRule",
                 {
@@ -369,7 +572,7 @@
                 },
                 function (res) {
                   if (res.code === 0) {
-                    layer.msg("清除规则成功！");
+                    layer.msg(i18n[currentLang].flushRuleSuccess);
                     if (done) done();
                     return false;
                   }
@@ -380,20 +583,23 @@
             });
           },
           flushMetrics: (table, chain, id, done) => {
-            let msg = "确认清除";
-            if (!!table) {
-              msg += " " + table + " 表";
+            const lang = i18n[currentLang];
+            const parts = [lang.clearConfirmPrefix];
+            if (table) {
+              parts.push(`${table} ${lang.tableWord}`);
             }
-            if (!!chain) {
-              msg += " " + chain + " 链";
+            if (chain) {
+              parts.push(`${chain} ${lang.chainWord}`);
             }
             if (!id) {
-              msg += "所有统计数据？";
+              parts.push(lang.allMetricsSuffix);
             } else {
-              msg += "第 " + id + "条规则的统计数据？";
+              parts.push(
+                `${lang.ruleMetricsPrefix}${id}${lang.ruleMetricsSuffix}`
+              );
             }
 
-            layer.confirm(msg, function () {
+            layer.confirm(parts.join(" "), function () {
               $.post(
                 "/flushMetrics",
                 {
@@ -404,7 +610,7 @@
                 },
                 function (res) {
                   if (res.code === 0) {
-                    layer.msg("清除统计数据成功！");
+                    layer.msg(i18n[currentLang].flushMetricsSuccess);
                     if (done) done();
                     return false;
                   }
@@ -415,14 +621,11 @@
             });
           },
           deleteRule: (table, chain, id, done) => {
-            let msg =
-              "确认清除 " +
-              table +
-              " 表 " +
-              chain +
-              " 链的第 " +
-              id +
-              " 条规则？";
+            const lang = i18n[currentLang];
+            const msg =
+              currentLang === "zh"
+                ? `确认清除 ${table} 表 ${chain} 链的第 ${id} 条规则？`
+                : `Confirm to clear ${table} table ${chain} chain rule #${id}?`;
             layer.confirm(msg, function () {
               $.post(
                 "/deleteRule",
@@ -434,7 +637,7 @@
                 },
                 function (res) {
                   if (res.code === 0) {
-                    layer.msg("清除规则成功！");
+                    layer.msg(i18n[currentLang].flushRuleSuccess);
                     if (done) done();
                     return false;
                   }
@@ -524,7 +727,7 @@
               },
               function (res) {
                 if (res.code === 0) {
-                  layer.msg("导入" + currentCommandBinary() + "规则成功！");
+                  layer.msg(i18n[currentLang].importSuccess);
                   if (done) done();
                   return false;
                 }
@@ -534,13 +737,14 @@
             );
           },
           flushEmptyCustomChain: (done) => {
-            layer.confirm("确认清除用户自定义的所有空链？", function () {
+            const lang = i18n[currentLang];
+            layer.confirm(lang.clearEmptyPrompt, function () {
               $.post(
                 "/flushEmptyCustomChain",
                 { protocol: currentProtocol },
                 function (res) {
                   if (res.code === 0) {
-                    layer.msg("清空自定义空链成功！");
+                    layer.msg(i18n[currentLang].clearEmptySuccess);
                     if (done) done();
                     return false;
                   }
@@ -553,6 +757,7 @@
         };
 
         function loadListRule(tableName, chainName, isAlert = true) {
+          const lang = i18n[currentLang];
           iptables.listRule(tableName, chainName, function (res) {
             if (res.code !== 0) {
               layer.alert(res.msg);
@@ -564,7 +769,7 @@
               bodyObj.html("");
               if (res.data.system.length > 0) {
                 bodyObj.append(
-                  '<blockquote class="layui-elem-quote" id="system">原生链</blockquote>'
+                  `<blockquote class="layui-elem-quote" id="system">${lang.nativeChain}</blockquote>`
                 );
                 for (k in res.data.system) {
                   let html = tableHTML("system", tableName, res.data.system[k]);
@@ -574,7 +779,7 @@
               if (res.data.custom.length > 0) {
                 bodyObj.append('<hr class="layui-border-blue">');
                 bodyObj.append(
-                  '<blockquote class="layui-elem-quote" id="custom">自定义链</blockquote>'
+                  `<blockquote class="layui-elem-quote" id="custom">${lang.customChain}</blockquote>`
                 );
                 for (k in res.data.custom) {
                   let html = tableHTML("custom", tableName, res.data.custom[k]);
@@ -595,7 +800,7 @@
             // console.log(html)
             let html = tableHTML(type, tableName, res.data[type][0]);
             bodyObj.html($(html).html());
-            if (isAlert) layer.msg("刷新成功");
+            if (isAlert) layer.msg(lang.refreshSuccess);
           });
         }
 
@@ -617,17 +822,18 @@
         $(document).on("click", ".chain-insert", function () {
           let tableName = $(this).parent().data("table");
           let chainName = $(this).parent().data("chain");
+          const lang = i18n[currentLang];
           execView(
-            "插入规则",
+            lang.insertRuleTitle,
             currentCommandBinary() + " -t " + tableName + " -I " + chainName,
-            "请输入规则",
+            lang.rulePlaceholder,
             "",
             function (val) {
               iptables.exec(
                 "-t " + tableName + " -I " + chainName + " " + val,
                 function () {
                   loadListRule(tableName, chainName, false);
-                  layer.msg("插入规则成功！");
+                  layer.msg(i18n[currentLang].insertSuccess);
                 }
               );
             }
@@ -636,17 +842,18 @@
         $(document).on("click", ".chain-append", function () {
           let tableName = $(this).parent().data("table");
           let chainName = $(this).parent().data("chain");
+          const lang = i18n[currentLang];
           execView(
-            "添加规则",
+            lang.appendRuleTitle,
             currentCommandBinary() + " -t " + tableName + " -A " + chainName,
-            "请输入规则",
+            lang.rulePlaceholder,
             "",
             function (val) {
               iptables.exec(
                 "-t " + tableName + " -A " + chainName + " " + val,
                 function () {
                   loadListRule(tableName, chainName, false);
-                  layer.msg("添加规则成功！");
+                  layer.msg(i18n[currentLang].appendSuccess);
                 }
               );
             }
@@ -681,11 +888,12 @@
         $(document).on("click", ".chain-exec", function () {
           let tableName = $(this).parent().data("table");
           let chainName = $(this).parent().data("chain");
+          const lang = i18n[currentLang];
           iptables.listExec(tableName, chainName, function (res) {
             let html =
               '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
             layer.alert(html.replace("#code#", res.data), {
-              title: "表: " + tableName + " 链: " + chainName,
+              title: `${lang.tableLabel}: ${tableName}, ${lang.chainLabel}: ${chainName}`,
             });
           });
         });
@@ -698,21 +906,31 @@
           iptables.getRuleInfo(tableName, chainName, id, function (info) {
             info = info.replace("-A ", "-R ");
             info = info.replace(chainName, chainName + " " + id + " ");
+            const lang = i18n[currentLang];
+            const editTitle =
+              currentLang === "zh"
+                ? "修改 " +
+                  tableName +
+                  "表, " +
+                  chainName +
+                  "链, 第" +
+                  id +
+                  "条规则"
+                : "Edit " +
+                  tableName +
+                  " table, " +
+                  chainName +
+                  " chain, rule #" +
+                  id;
             execView(
-              "修改 " +
-                tableName +
-                "表, " +
-                chainName +
-                "链, 第" +
-                id +
-                "条规则",
+              editTitle,
               "iptables -t " + tableName,
               "",
               info,
               function (val) {
                 iptables.exec("-t " + tableName + " " + val, function () {
                   loadListRule(tableName, chainName, false);
-                  layer.msg("修改规则成功！");
+                  layer.msg(i18n[currentLang].updateSuccess);
                 });
               }
             );
@@ -729,20 +947,33 @@
         });
         // 清除所有规则
         $("#clear-all-rule").click(function () {
-          let tableName = $(this).parent().data("table");
-          iptables.flushRule("", "", function () {
-            loadListRule(tableName, "", false);
-          });
+          const lang = i18n[currentLang];
+          const tableName = currentTableName();
+          layer.confirm(
+            `${lang.clearConfirmPrefix} ${lang.allRulesSuffix}`,
+            function () {
+              iptables.flushRule("", "", function () {
+                loadListRule(tableName, "", false);
+              });
+            }
+          );
         });
         // 清除当前表规则
         $("#clear-current-table-rule").click(function () {
           let tableName = currentTableName();
-          iptables.flushRule(tableName, "", function () {
-            loadListRule(tableName, "", false);
-          });
+          const lang = i18n[currentLang];
+          layer.confirm(
+            `${lang.clearConfirmPrefix} ${tableName} ${lang.tableWord} ${lang.allRulesSuffix}`,
+            function () {
+              iptables.flushRule(tableName, "", function () {
+                loadListRule(tableName, "", false);
+              });
+            }
+          );
         });
 
         $("#export-all-rule").click(function () {
+          const lang = i18n[currentLang];
           iptables.export("", "", function (data) {
             let html =
               '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
@@ -750,13 +981,13 @@
             html = html.replace("#code#", data);
             layer.open({
               type: 1,
-              title: "全部规则命令",
-              btn: ["复制", "导出", "确定"],
+              title: lang.exportDialogTitle,
+              btn: [lang.btnCopy, lang.btnDownload, lang.btnOk],
               content: html,
               area: ["auto", "600px"],
               btn1: function () {
                 copyText($, data);
-                layer.msg("复制成功，可直接粘贴至文件！", { icon: 1 });
+                layer.msg(i18n[currentLang].copySuccess, { icon: 1 });
               },
               btn2: function () {
                 fileName = "iptable-save.txt";
@@ -779,13 +1010,18 @@
           });
         });
         $("#import-all-rule").click(function () {
+          const lang = i18n[currentLang];
           layer.prompt(
             {
               formType: 2,
               value: "",
               maxlength: 1024 * 1024 * 4,
-              title: "粘贴" + currentCommandBinary() + "规则",
+              title: lang.importPromptTpl.replace(
+                "{cmd}",
+                currentCommandBinary()
+              ),
               area: ["800px", "350px"], //自定义文本域宽高
+              btn: [lang.confirm, lang.cancel],
             },
             function (value, index, elem) {
               let tableName = currentTableName();
@@ -821,10 +1057,11 @@
         });
         $("#exec-iptables").click(function () {
           let tableName = currentTableName();
+          const lang = i18n[currentLang];
           execView(
-            "执行" + currentCommandBinary() + "命令",
+            lang.execCommandTitle.replace("iptables", currentCommandBinary()),
             currentCommandBinary(),
-            "输入命令",
+            lang.inputCommand,
             "",
             function (val) {
               iptables.exec(val, function (res) {
@@ -833,10 +1070,10 @@
                   let html =
                     '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
                   layer.alert(html.replace("#code#", res.data), {
-                    title: "命令执行成功",
+                    title: i18n[currentLang].commandSuccess,
                   });
                 } else {
-                  layer.msg("命令执行成功");
+                  layer.msg(i18n[currentLang].commandSuccess);
                 }
               });
             }
@@ -848,70 +1085,33 @@
             let html =
               '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
             layer.alert(html.replace("#code#", res.data), {
-              title: currentCommandBinary() + " 表: " + tableName,
+              title:
+                currentCommandBinary() +
+                " " +
+                i18n[currentLang].tableLabel +
+                ": " +
+                tableName,
             });
           });
         });
+        $("#open-iptables-doc").click(function () {
+          window.open("/docs/iptables-command-reference", "_blank");
+        });
+        $("#language-toggle").click(function () {
+          const nextLang = currentLang === "zh" ? "en" : "zh";
+          setLanguage(nextLang);
+          // reload page
+          location.reload();
+        });
       });
 
-      let template = `
-<fieldset class="layui-elem-field" id="#chain-name#" data-type="#type#">
-  <legend style="font-size: 16px;">#title#</legend>
-  <div class="layui-field-box">
-                <div  data-table="#table-name#" data-chain="#chain-name#">
-                    <button type="button" class="layui-btn layui-btn-sm chain-insert">插入</button>
-                    <button type="button" class="layui-btn layui-btn-sm layui-btn-primary chain-append">添加</button>
-                    <button type="button" class="layui-btn layui-btn-sm layui-btn-warm chain-flush-metrics">清零计数</button>
-                    <button type="button" class="layui-btn layui-btn-sm layui-btn-danger chain-flush">清空规则</button>
-                    <button type="button" class="layui-btn layui-btn-sm layui-btn-normal chain-reload" >刷新</button>
-                    <button type="button" class="layui-btn layui-btn-sm layui-btn-primary layui-border-green chain-exec" >查看命令</button>
-                </div>
-                <table class="layui-table" >
-                    <thead>
-                       <tr>
-                         <th>num</th>
-                         <th>pkts</th>
-                         <th>bytes</th>
-                         <th>target</th>
-                         <th>prot</th>
-                         <th>opt</th>
-                         <th>in</th>
-                         <th>out</th>
-                         <th>source</th>
-                         <th>destination</th>
-                         <th>action</th>
-                         <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    #td#
-                    </tbody>
-                </table>
-            </div>
-        </fieldset>`;
-
       function tableHTML(type, tableName, data) {
-        let html = template;
+        const lang = i18n[currentLang];
         let title = "";
-        switch (type) {
-          case "system":
-            title =
-              "链: " +
-              data.title.chain +
-              " &nbsp;默认策略: " +
-              data.title.policy +
-              " &nbsp;经过的包数量: " +
-              data.title.packets +
-              " &nbsp;字节数: " +
-              data.title.bytes;
-            break;
-          case "custom":
-            title =
-              "链: " +
-              data.title.chain +
-              " &nbsp;被引用数量: " +
-              data.title.references;
-            break;
+        if (type === "system") {
+          title = `${lang.chainLabel}: ${data.title.chain} &nbsp;${lang.defaultPolicy}: ${data.title.policy} &nbsp;${lang.packets}: ${data.title.packets} &nbsp;${lang.bytes}: ${data.title.bytes}`;
+        } else {
+          title = `${lang.chainLabel}: ${data.title.chain} &nbsp;${lang.references}: ${data.title.references}`;
         }
         let td = "";
         for (k in data.list) {
@@ -938,29 +1138,63 @@
             data.title.chain +
             "' data-id='" +
             data.list[k].num +
-            "'>清零</button>" +
+            "'>" +
+            lang.zero +
+            "</button>" +
             " <button class='layui-btn layui-btn-xs layui-btn-primary delete-rule' data-table='" +
             tableName +
             "' data-chain='" +
             data.title.chain +
             "' data-id='" +
             data.list[k].num +
-            "'>删除</button>" +
+            "'>" +
+            lang.delete +
+            "</button>" +
             "</div></td>";
           td += "</tr>";
         }
-        html = html.replace("#title#", title);
-        html = html.replace("#type#", type);
-        html = html.replaceAll("#table-name#", tableName);
-        html = html.replaceAll("#chain-name#", data.title.chain);
-        return html.replace("#td#", td);
+        return `
+<fieldset class="layui-elem-field" id="${data.title.chain}" data-type="${type}">
+  <legend style="font-size: 16px;">${title}</legend>
+  <div class="layui-field-box">
+    <div data-table="${tableName}" data-chain="${data.title.chain}">
+      <button type="button" class="layui-btn layui-btn-sm chain-insert">${lang.insert}</button>
+      <button type="button" class="layui-btn layui-btn-sm layui-btn-primary chain-append">${lang.append}</button>
+      <button type="button" class="layui-btn layui-btn-sm layui-btn-warm chain-flush-metrics">${lang.zeroCounters}</button>
+      <button type="button" class="layui-btn layui-btn-sm layui-btn-danger chain-flush">${lang.clearChain}</button>
+      <button type="button" class="layui-btn layui-btn-sm layui-btn-normal chain-reload">${lang.refresh}</button>
+      <button type="button" class="layui-btn layui-btn-sm layui-btn-primary layui-border-green chain-exec">${lang.viewCmd}</button>
+    </div>
+    <table class="layui-table">
+      <thead>
+        <tr>
+          <th>num</th>
+          <th>pkts</th>
+          <th>bytes</th>
+          <th>target</th>
+          <th>prot</th>
+          <th>opt</th>
+          <th>in</th>
+          <th>out</th>
+          <th>source</th>
+          <th>destination</th>
+          <th>action</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${td}
+      </tbody>
+    </table>
+  </div>
+</fieldset>`;
       }
 
       function dirHTML(data) {
+        const lang = i18n[currentLang];
         let html = "";
         if (data.system.length > 0) {
-          html +=
-            '<li><a href="#system"><cite>原生链</cite></a></li><ul style="margin-left: 15px;">';
+          html += `<li><a href="#system"><cite>${lang.nativeChain}</cite></a></li><ul style="margin-left: 15px;">`;
           for (k in data.system) {
             let name = data.system[k].title.chain;
             html +=
@@ -969,8 +1203,7 @@
           html += "</ul>";
         }
         if (data.custom.length > 0) {
-          html +=
-            '<li><a href="#custom"><cite>自定义链</cite></a></li><ul style="margin-left: 15px;">';
+          html += `<li><a href="#custom"><cite>${lang.customChain}</cite></a></li><ul style="margin-left: 15px;">`;
           for (k in data.custom) {
             let name = data.custom[k].title.chain;
             html +=
@@ -990,6 +1223,7 @@
        * @param confirm function 命令完成回调
        */
       function execView(title, prefix, placeholder, val, confirm) {
+        const lang = i18n[currentLang];
         layer.open({
           id: 1,
           type: 1,
@@ -1011,7 +1245,7 @@
             "</div>" +
             "</div>" +
             "</div>",
-          btn: ["确认", "取消"],
+          btn: [lang.confirm, lang.cancel],
           btn1: function (index, layero) {
             confirm(layero.find("input").val());
             layer.close(index);

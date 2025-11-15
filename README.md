@@ -2,6 +2,11 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/pretty66/iptables-web)](https://github.com/pretty66/iptables-web/blob/master/go.mod)
 
+<p>
+  <a href="README.md" style="padding:6px 14px;border:1px solid #1E9FFF;border-radius:4px;text-decoration:none;margin-right:10px;">中文</a>
+  <a href="README_en.md" style="padding:6px 14px;border:1px solid #1E9FFF;border-radius:4px;text-decoration:none;background-color:#1E9FFF;color:#fff;">English</a>
+</p>
+
 ### iptables-web 是一个轻量级的 iptables/ip6tables Web 管理平台，集成前端界面与 REST API，单二进制即可部署，适合日常运维与学习使用。
 
 ![web](./docs/iptables-web.png)

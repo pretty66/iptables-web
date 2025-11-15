@@ -44,6 +44,9 @@ var webIndex []byte
 //go:embed web/*
 var staticFiles embed.FS
 
+//go:embed docs/iptables-command-reference.html
+var iptablesCommandDoc []byte
+
 // BuildDate: Binary file compilation time
 // BuildVersion: Binary compiled GIT version
 var (
@@ -210,6 +213,11 @@ func initRoute(mux *HTTPMux, ipv4, ipv6 iptables.Iptableser) {
 		_, _ = w.Write(webIndex)
 	})
 	mux.Handle("/web/", http.FileServer(http.FS(staticFiles)))
+
+	mux.HandleFunc("/docs/iptables-command-reference", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write(iptablesCommandDoc)
+	})
 }
 
 func pickIptables(req *http.Request, ipv4, ipv6 iptables.Iptableser) (iptables.Iptableser, error) {
@@ -246,12 +254,12 @@ func argsFilter(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		table := r.FormValue("table")
 		if len(table) > 0 && !verifyArgs.MatchString(table) {
-			http.Error(w, "参数错误!", 200)
+			http.Error(w, "param error!", 200)
 			return
 		}
 		chain := r.FormValue("chain")
 		if len(chain) > 0 && !verifyArgs.MatchString(chain) {
-			http.Error(w, "参数错误!", 200)
+			http.Error(w, "param error!", 200)
 			return
 		}
 		handler.ServeHTTP(w, r)
