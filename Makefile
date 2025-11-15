@@ -1,6 +1,6 @@
 BIN_FILE=iptables-server
 
-SRCS=./main.go
+SRCS=./
 
 # git commit hash
 COMMIT_HASH=$(shell git rev-parse --short HEAD || echo "GitNotFound")
@@ -24,7 +24,7 @@ run:
 
 images:
 	docker build -t pretty66/iptables-web:1.1.2 -t pretty66/iptables-web:latest .
-	docker push
+# 	docker push
 
 clean:
 	rm -f $(BIN_FILE)

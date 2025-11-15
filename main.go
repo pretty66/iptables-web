@@ -31,6 +31,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/pretty66/iptables-web/pkg/iptables"
@@ -81,13 +82,18 @@ func main() {
 		panic("Only Linux system is supported")
 	}
 
-	ipc, err := iptables.NewIPV4()
+	ipv4, err := iptables.NewIPV4()
 	if err != nil {
 		panic(err)
 	}
+	ipv6, err := iptables.NewIPV6()
+	if err != nil {
+		log.Println("init ipv6 iptables failed:", err)
+		ipv6 = nil
+	}
 
 	mux := NewHTTPMux()
-	initRoute(mux, ipc)
+	initRoute(mux, ipv4, ipv6)
 	server := &http.Server{
 		Addr:         address,
 		Handler:      mux,
@@ -102,78 +108,89 @@ func main() {
 	}
 }
 
-func initRoute(mux *HTTPMux, ipc iptables.Iptableser) {
+func initRoute(mux *HTTPMux, ipv4, ipv6 iptables.Iptableser) {
 	mux.Use(auth)
 	mux.Use(argsFilter)
-	mux.HandleFunc("/version", func(w http.ResponseWriter, req *http.Request) {
+	withIptables := func(handler func(iptables.Iptableser, http.ResponseWriter, *http.Request)) http.HandlerFunc {
+		return func(w http.ResponseWriter, req *http.Request) {
+			ipc, err := pickIptables(req, ipv4, ipv6)
+			if err != nil {
+				utils.Output(w, err, nil)
+				return
+			}
+			handler(ipc, w, req)
+		}
+	}
+
+	mux.HandleFunc("/version", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		v, err := ipc.Version()
 		utils.Output(w, err, v)
-	})
+	}))
 
-	mux.HandleFunc("/listRule", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/listRule", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		table := req.FormValue("table")
 		chain := req.FormValue("chain")
 		l, err := ipc.ListRule(table, chain)
 		utils.Output(w, err, l)
-	})
+	}))
 
-	mux.HandleFunc("/listExec", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/listExec", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		table := req.FormValue("table")
 		chain := req.FormValue("chain")
 		l, err := ipc.ListExec(table, chain)
 		utils.Output(w, err, l)
-	})
+	}))
 
-	mux.HandleFunc("/flushRule", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/flushRule", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		table := req.FormValue("table")
 		chain := req.FormValue("chain")
 		err := ipc.FlushRule(table, chain)
 		utils.Output(w, err, nil)
-	})
+	}))
 
-	mux.HandleFunc("/deleteRule", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/deleteRule", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		table := req.FormValue("table")
 		chain := req.FormValue("chain")
 		id := req.FormValue("id")
 		err := ipc.DeleteRule(table, chain, id)
 		utils.Output(w, err, nil)
-	})
+	}))
 
-	mux.HandleFunc("/flushMetrics", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/flushMetrics", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		table := req.FormValue("table")
 		chain := req.FormValue("chain")
 		id := req.FormValue("id")
 		err := ipc.FlushMetrics(table, chain, id)
 		utils.Output(w, err, nil)
-	})
+	}))
 
-	mux.HandleFunc("/getRuleInfo", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/getRuleInfo", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		table := req.FormValue("table")
 		chain := req.FormValue("chain")
 		id := req.FormValue("id")
 		info, err := ipc.GetRuleInfo(table, chain, id)
 		utils.Output(w, err, info)
-	})
+	}))
 
-	mux.HandleFunc("/flushEmptyCustomChain", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/flushEmptyCustomChain", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		err := ipc.FlushEmptyCustomChain()
 		utils.Output(w, err, nil)
-	})
+	}))
 
-	mux.HandleFunc("/export", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/export", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		table := req.FormValue("table")
 		chain := req.FormValue("chain")
 		rule, err := ipc.Export(table, chain)
 		utils.Output(w, err, rule)
-	})
+	}))
 
-	mux.HandleFunc("/import", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/import", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		rule := req.FormValue("rule")
 		err := ipc.Import(rule)
 		utils.Output(w, err, nil)
-	})
+	}))
 
-	mux.HandleFunc("/exec", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/exec", withIptables(func(ipc iptables.Iptableser, w http.ResponseWriter, req *http.Request) {
 		args := req.FormValue("args")
 		if len(args) == 0 {
 			utils.Output(w, nil, nil)
@@ -182,7 +199,7 @@ func initRoute(mux *HTTPMux, ipc iptables.Iptableser) {
 		s := utils.SplitAndTrimSpace(args, " ")
 		str, err := ipc.Exec(s...)
 		utils.Output(w, err, str)
-	})
+	}))
 
 	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -193,6 +210,24 @@ func initRoute(mux *HTTPMux, ipc iptables.Iptableser) {
 		_, _ = w.Write(webIndex)
 	})
 	mux.Handle("/web/", http.FileServer(http.FS(staticFiles)))
+}
+
+func pickIptables(req *http.Request, ipv4, ipv6 iptables.Iptableser) (iptables.Iptableser, error) {
+	protocol := strings.ToLower(req.FormValue("protocol"))
+	switch protocol {
+	case "", "ipv4", "ip4", "4":
+		if ipv4 == nil {
+			return nil, fmt.Errorf("ipv4 iptables not available")
+		}
+		return ipv4, nil
+	case "ipv6", "ip6", "6":
+		if ipv6 == nil {
+			return nil, fmt.Errorf("ipv6 iptables not available")
+		}
+		return ipv6, nil
+	default:
+		return nil, fmt.Errorf("unsupported protocol %s", protocol)
+	}
 }
 
 func auth(handler http.Handler) http.Handler {

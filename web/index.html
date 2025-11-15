@@ -19,639 +19,842 @@
 
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="/web/layui/css/layui.css"/>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="/web/layui/css/layui.css" />
     <style>
-        .layui-tab-title li {
-            width: 10%;
-        }
+      .layui-tab-title li {
+        width: 10%;
+      }
 
-        body .layui-layer-dir {
-            box-shadow: none;
-            border: 1px solid #d2d2d2;
-        }
+      body .layui-layer-dir {
+        box-shadow: none;
+        border: 1px solid #d2d2d2;
+      }
 
-        body .layui-layer-dir .layui-layer-content {
-            padding: 10px;
-        }
+      body .layui-layer-dir .layui-layer-content {
+        padding: 10px;
+      }
 
-        .site-dir {
-            display: none;
-        }
+      .site-dir {
+        display: none;
+      }
 
-        .site-dir li {
-            line-height: 26px;
-            margin-left: 20px;
-            overflow: visible;
-            list-style-type: disc;
-        }
+      .site-dir li {
+        line-height: 26px;
+        margin-left: 20px;
+        overflow: visible;
+        list-style-type: disc;
+      }
 
-        .site-dir li a {
-            display: block;
-        }
+      .site-dir li a {
+        display: block;
+      }
 
-        .layui-elem-quote {
-            font-size: 20px;
-        }
+      .layui-elem-quote {
+        font-size: 20px;
+      }
 
-        .global-func button:hover {
-            font-size: 14px;
-        }
+      .global-func button:hover {
+        font-size: 14px;
+      }
 
-        .global-func {
-            position: fixed;
-            z-index: 9999;
-            right: 0;
-            padding-right: 10px;
-            top: 10%;
-            text-align: center;
-        }
+      .global-func {
+        position: fixed;
+        z-index: 9999;
+        right: 0;
+        padding-right: 10px;
+        top: 10%;
+        text-align: center;
+      }
 
-        .global-func button {
-            margin-bottom: 20px;
-            width: 120px;
-            /*border-color: #1E9FFF;*/
-            /*border-color: #5FB878;*/
-            /*color:#1E9FFF;*/
-        }
+      .global-func button {
+        margin-bottom: 20px;
+        width: 120px;
+        /*border-color: #1E9FFF;*/
+        /*border-color: #5FB878;*/
+        /*color:#1E9FFF;*/
+      }
 
-        tbody > tr:hover {
-            cursor: pointer;
-        }
+      tbody > tr:hover {
+        cursor: pointer;
+      }
 
-        #nav-dir-hide {
-            display: none;
-            position: fixed;
-            top: 8%;
-            padding: 20px;
-        }
+      #nav-dir-hide {
+        display: none;
+        position: fixed;
+        top: 8%;
+        padding: 20px;
+      }
+
+      .protocol-switch {
+        text-align: center;
+        margin: 10px 0 0;
+        font-size: 16px;
+      }
+
+      .protocol-switch label {
+        margin: 0 12px;
+        cursor: pointer;
+      }
+
+      .protocol-switch input {
+        margin-right: 4px;
+      }
     </style>
-</head>
-<body>
-<ul class="layui-nav layui-bg-blue" style="text-align:center;">
-    <li class="layui-nav-item">
+  </head>
+  <body>
+    <ul class="layui-nav layui-bg-blue" style="text-align: center">
+      <li class="layui-nav-item">
         iptables 管理平台
         <span class="ipc-version"></span>
-    </li>
-</ul>
-<div class="layui-container">
-    <div class="layui-row">
+      </li>
+    </ul>
+    <div class="protocol-switch">
+      <label
+        ><input type="radio" name="protocol" value="ipv4" checked />IPv4</label
+      >
+      <label><input type="radio" name="protocol" value="ipv6" />IPv6</label>
+    </div>
+    <div class="layui-container">
+      <div class="layui-row">
         <div class="layui-tab layui-tab-brief" lay-filter="tablename">
-            <ul class="layui-tab-title iptables-table" style="text-align: center">
-                <li id="raw">raw</li>
-                <li id="mangle">mangle</li>
-                <li id="nat">nat</li>
-                <li id="filter" class="layui-this">filter</li>
-            </ul>
+          <ul class="layui-tab-title iptables-table" style="text-align: center">
+            <li id="raw">raw</li>
+            <li id="mangle">mangle</li>
+            <li id="nat">nat</li>
+            <li id="filter" class="layui-this">filter</li>
+          </ul>
         </div>
-        <div id="table-body">
-        </div>
+        <div id="table-body"></div>
+      </div>
     </div>
-</div>
-<!--目录-->
-<div id="nav-dir-hide">
-    <i class="layui-icon layui-icon-triangle-r" style="font-size: 20px;color:#1E9FFF"></i>
-</div>
-<div id="nav-dir" class="layui-layer-page layui-layer-dir" type="page" times="1" showtime="0" contype="object"
-     style="position: fixed; top: 100px;float: right;max-width: 12%;background-color: #FFF">
-    <div class="layui-layer-title" style="cursor: move;">目录</div>
-    <div style="padding: 10px;">
-        <ul class="site-dir layui-layer-wrap" style="display: block;" id="dir-list">
-        </ul>
+    <!--目录-->
+    <div id="nav-dir-hide">
+      <i
+        class="layui-icon layui-icon-triangle-r"
+        style="font-size: 20px; color: #1e9fff"
+      ></i>
     </div>
-    <span class="layui-layer-setwin"></span><span class="layui-layer-resize"></span>
-</div>
-<!--功能按钮-->
-<div id="global-func" class="global-func">
-    <button id="clear-all-rule" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
+    <div
+      id="nav-dir"
+      class="layui-layer-page layui-layer-dir"
+      type="page"
+      times="1"
+      showtime="0"
+      contype="object"
+      style="
+        position: fixed;
+        top: 100px;
+        float: right;
+        max-width: 12%;
+        background-color: #fff;
+      "
+    >
+      <div class="layui-layer-title" style="cursor: move">目录</div>
+      <div style="padding: 10px">
+        <ul
+          class="site-dir layui-layer-wrap"
+          style="display: block"
+          id="dir-list"
+        ></ul>
+      </div>
+      <span class="layui-layer-setwin"></span
+      ><span class="layui-layer-resize"></span>
+    </div>
+    <!--功能按钮-->
+    <div id="global-func" class="global-func">
+      <button
+        id="clear-all-rule"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         清空所有表规则
-    </button>
-    <br>
-    <button id="clear-current-table-rule"
-            class="layui-btn layui-btn-primary layui-btn-sm  layui-btn-radius ">
+      </button>
+      <br />
+      <button
+        id="clear-current-table-rule"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         清空当前表规则
-    </button>
-    <br>
-    <button id="clear-all-empty-chain"
-            class="layui-btn layui-btn-primary layui-btn-sm  layui-btn-radius ">
+      </button>
+      <br />
+      <button
+        id="clear-all-empty-chain"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         清空自定义空链
-    </button>
-    <br>
-    <button id="clear-all-metrics" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
+      </button>
+      <br />
+      <button
+        id="clear-all-metrics"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         清零所有表计数
-    </button>
-    <br>
-    <button id="clear-current-table-metrics"
-            class="layui-btn layui-btn-primary layui-btn-sm  layui-btn-radius ">
+      </button>
+      <br />
+      <button
+        id="clear-current-table-metrics"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         清零当前表计数
-    </button>
-    <br>
-    <button id="self-iptables" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
+      </button>
+      <br />
+      <button
+        id="self-iptables"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         查看当前表规则
-    </button>
-    <br>
-    <button id="exec-iptables" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
+      </button>
+      <br />
+      <button
+        id="exec-iptables"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         执行iptables命令
-    </button>
-    <br>
-    <button id="export-all-rule" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
+      </button>
+      <br />
+      <button
+        id="export-all-rule"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         导出iptables规则
-    </button>
-    <br>
-    <button id="import-all-rule" class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">
+      </button>
+      <br />
+      <button
+        id="import-all-rule"
+        class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius"
+      >
         导入iptables规则
-    </button>
-<!--    <br>-->
-<!--    <a href="https://blog.xujianqq.com.cn/archives/61" target="_blank"-->
-<!--       class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">iptables帮助文档</a>-->
-</div>
-<!--复制、导出-->
-<div class="modal-footer" style="display:none;">
-    <a onfocus="this.blur();" id="createInvoteBtn" class="ipt-todo" href="javascript:void(0)">生成并导出Txt文件</a>
-    <a onfocus="this.blur();" download="code.txt" id="createInvote" class="ipt-todo hide">code</a>
-</div>
-<textarea id="copy" style="display:none;"></textarea>
-<script src="/web/layui/layui.js"></script>
-<!--您的Layui代码start-->
-<script type="text/javascript">
-    layui.use(['layer', 'table', 'element', 'code'], function () {
-        var layer = layui.layer //弹层
-            , table = layui.table //表格
-            , element = layui.element; //元素操作 等等...
-        var $ = layui.$;
-        $.get("/version", function (res) {
-            $('.ipc-version').html(res.data)
-        });
-        let dirObj = $('#nav-dir');
-        let dirHideObj = $('#nav-dir-hide');
-        // 右侧
-        let globalObj = $('#global-func');
-        function navDirStatus(display) {
-            dirObj.css('display', display);
-            dirHideObj.css('display', {none: 'block', block: 'none'}[display])
-            if (display === 'none') {
-                // 增加绑定事件
-                dirHideObj.hover(function () {
-                    dirObj.css('display', 'block')
-                });
-                dirObj.mouseleave(function () {
-                    dirObj.css('display', 'none');
-                });
-                globalObj.hover(function () {
-                    globalObj.css('right', '0')
-                })
-                globalObj.mouseleave(function () {
-                    globalObj.css('right', '-120px');
-                });
-                globalObj.css('right', '-120px')
-            } else {
-                // 清除绑定的事件
-                dirObj.unbind('mouseleave');
-                dirHideObj.unbind('hover');
-                globalObj.unbind('hover')
-                globalObj.unbind('mouseleave')
+      </button>
+      <!--    <br>-->
+      <!--    <a href="https://blog.xujianqq.com.cn/archives/61" target="_blank"-->
+      <!--       class="layui-btn layui-btn-primary layui-btn-sm layui-btn-radius">iptables帮助文档</a>-->
+    </div>
+    <!--复制、导出-->
+    <div class="modal-footer" style="display: none">
+      <a
+        onfocus="this.blur();"
+        id="createInvoteBtn"
+        class="ipt-todo"
+        href="javascript:void(0)"
+        >生成并导出Txt文件</a
+      >
+      <a
+        onfocus="this.blur();"
+        download="code.txt"
+        id="createInvote"
+        class="ipt-todo hide"
+        >code</a
+      >
+    </div>
+    <textarea id="copy" style="display: none"></textarea>
+    <script src="/web/layui/layui.js"></script>
+    <!--您的Layui代码start-->
+    <script type="text/javascript">
+      let currentProtocol = "ipv4";
+      function currentCommandBinary() {
+        return currentProtocol === "ipv6" ? "ip6tables" : "iptables";
+      }
 
-                globalObj.css('right', '0')
-            }
+      function currentTableName() {
+        let name = $(".layui-tab-title .layui-this").attr("id");
+        if (!name) {
+          name = $(".layui-tab-title .layui-this").html();
+        }
+        return name || "filter";
+      }
+
+      layui.use(["layer", "table", "element", "code"], function () {
+        var layer = layui.layer, //弹层
+          table = layui.table, //表格
+          element = layui.element; //元素操作 等等...
+        window.$ = layui.$;
+        $.get("/version", function (res) {
+          $(".ipc-version").html(res.data);
+        });
+        $('input[name="protocol"]').on("change", function () {
+          currentProtocol = this.value;
+          loadListRule(currentTableName());
+        });
+        let dirObj = $("#nav-dir");
+        let dirHideObj = $("#nav-dir-hide");
+        // 右侧
+        let globalObj = $("#global-func");
+        function navDirStatus(display) {
+          dirObj.css("display", display);
+          dirHideObj.css("display", { none: "block", block: "none" }[display]);
+          if (display === "none") {
+            // 增加绑定事件
+            dirHideObj.hover(function () {
+              dirObj.css("display", "block");
+            });
+            dirObj.mouseleave(function () {
+              dirObj.css("display", "none");
+            });
+            globalObj.hover(function () {
+              globalObj.css("right", "0");
+            });
+            globalObj.mouseleave(function () {
+              globalObj.css("right", "-120px");
+            });
+            globalObj.css("right", "-120px");
+          } else {
+            // 清除绑定的事件
+            dirObj.unbind("mouseleave");
+            dirHideObj.unbind("hover");
+            globalObj.unbind("hover");
+            globalObj.unbind("mouseleave");
+
+            globalObj.css("right", "0");
+          }
         }
 
         var isHide = false;
 
         if ($(document.body).width() < 1500) {
-            navDirStatus('none');
-            isHide = true;
+          navDirStatus("none");
+          isHide = true;
         } else {
-            navDirStatus('block');
-            isHide = false;
-
+          navDirStatus("block");
+          isHide = false;
         }
         $(window).resize(function () {
-            //执行代码块
-            // let globalFunc = $('#global-func');
-            if ($(document.body).width() < 1500) {
-                if (!isHide) {
-                    isHide = true
-                    navDirStatus('none')
-                }
-            } else {
-                if (isHide) {
-                    isHide = false
-                    navDirStatus('block')
-                }
+          //执行代码块
+          // let globalFunc = $('#global-func');
+          if ($(document.body).width() < 1500) {
+            if (!isHide) {
+              isHide = true;
+              navDirStatus("none");
             }
+          } else {
+            if (isHide) {
+              isHide = false;
+              navDirStatus("block");
+            }
+          }
         });
 
         let iptables = {
-            listRule: (table = 'filter', chain = '', done) => {
-                $.post("/listRule", {
-                    table: table,
-                    chain: chain
-                }, function (res) {
-                    done(res)
-                }, 'json')
-            },
-            flushRule: (table = 'filter', chain = '', done) => {
-                let msg = '确认清除';
-                if (!!table) {
-                    msg += ' ' + table + ' 表'
-                }
-                if (!chain) {
-                    msg += '所有规则？'
-                } else {
-                    msg += ' ' + chain + ' 链所有规则？'
-                }
-                layer.confirm(msg, function () {
-                    $.post("/flushRule", {
-                        table: table,
-                        chain: chain
-                    }, function (res) {
-                        if (res.code === 0) {
-                            layer.msg('清除规则成功！')
-                            if (done)
-                                done()
-                            return false;
-                        }
-                        layer.alert(res.msg)
-                    }, 'json')
-                })
-            },
-            flushMetrics: (table, chain, id, done) => {
-                let msg = '确认清除';
-                if (!!table) {
-                    msg += ' ' + table + ' 表'
-                }
-                if (!!chain) {
-                    msg += ' ' + chain + ' 链'
-                }
-                if (!id) {
-                    msg += '所有统计数据？'
-                } else {
-                    msg += '第 ' + id + '条规则的统计数据？'
-                }
-
-                layer.confirm(msg, function () {
-                    $.post("/flushMetrics", {
-                        table: table,
-                        chain: chain,
-                        id: id,
-                    }, function (res) {
-                        if (res.code === 0) {
-                            layer.msg('清除统计数据成功！')
-                            if (done)
-                                done()
-                            return false;
-                        }
-                        layer.alert(res.msg)
-                    }, 'json')
-                })
-            },
-            deleteRule: (table, chain, id, done) => {
-                let msg = '确认清除 ' + table + ' 表 ' + chain + ' 链的第 ' + id + ' 条规则？';
-                layer.confirm(msg, function () {
-                    $.post("/deleteRule", {
-                        table: table,
-                        chain: chain,
-                        id: id,
-                    }, function (res) {
-                        if (res.code === 0) {
-                            layer.msg('清除规则成功！')
-                            if (done)
-                                done()
-                            return false;
-                        }
-                        layer.alert(res.msg)
-                    }, 'json')
-                })
-            },
-            getRuleInfo: (table, chain, id, done) => {
-                $.post("/getRuleInfo", {
-                    table: table,
-                    chain: chain,
-                    id: id,
-                }, function (res) {
-                    if (res.code !== 0) {
-                        layer.alert(res.msg)
-                        return false;
-                    }
-                    done(res.data)
-                }, 'json')
-            },
-            exec: (args, done) => {
-                $.post("/exec", {
-                    args: args
-                }, function (res) {
-                    if (res.code !== 0) {
-                        layer.alert(res.msg)
-                        return false;
-                    }
-
-                    if (done) {
-                        done(res)
-                    }
-                }, 'json')
-            },
-            listExec: (table, chain = '', done) => {
-                $.post("/listExec", {
-                    table: table,
-                    chain: chain
-                }, function (res) {
-                    done(res)
-                }, 'json')
-            },
-            export: (table, chain, done) => {
-                $.post("/export", {
-                    table: table,
-                    chain: chain
-                }, function (res) {
-                    if (res.code !== 0) {
-                        layer.alert(res.msg)
-                        return
-                    }
-                    done(res.data)
-                }, 'json')
-            },
-            import: (rule, done) => {
-                $.post("/import", {
-                    rule: rule,
-                }, function (res) {
-                    if (res.code === 0) {
-                        layer.msg('导入iptables规则成功！')
-                        if (done)
-                            done()
-                        return false;
-                    }
-                    layer.alert(res.msg)
-                }, 'json')
-            },
-            flushEmptyCustomChain: (done) => {
-                layer.confirm('确认清除用户自定义的所有空链？', function () {
-                    $.post("/flushEmptyCustomChain", {}, function (res) {
-                        if (res.code === 0) {
-                            layer.msg('清空自定义空链成功！')
-                            if (done)
-                                done()
-                            return false;
-                        }
-                        layer.alert(res.msg)
-                    }, 'json')
-                })
+          listRule: (table = "filter", chain = "", done) => {
+            $.post(
+              "/listRule",
+              {
+                table: table,
+                chain: chain,
+                protocol: currentProtocol,
+              },
+              function (res) {
+                done(res);
+              },
+              "json"
+            );
+          },
+          flushRule: (table = "filter", chain = "", done) => {
+            let msg = "确认清除";
+            if (!!table) {
+              msg += " " + table + " 表";
             }
+            if (!chain) {
+              msg += "所有规则？";
+            } else {
+              msg += " " + chain + " 链所有规则？";
+            }
+            layer.confirm(msg, function () {
+              $.post(
+                "/flushRule",
+                {
+                  table: table,
+                  chain: chain,
+                  protocol: currentProtocol,
+                },
+                function (res) {
+                  if (res.code === 0) {
+                    layer.msg("清除规则成功！");
+                    if (done) done();
+                    return false;
+                  }
+                  layer.alert(res.msg);
+                },
+                "json"
+              );
+            });
+          },
+          flushMetrics: (table, chain, id, done) => {
+            let msg = "确认清除";
+            if (!!table) {
+              msg += " " + table + " 表";
+            }
+            if (!!chain) {
+              msg += " " + chain + " 链";
+            }
+            if (!id) {
+              msg += "所有统计数据？";
+            } else {
+              msg += "第 " + id + "条规则的统计数据？";
+            }
+
+            layer.confirm(msg, function () {
+              $.post(
+                "/flushMetrics",
+                {
+                  table: table,
+                  chain: chain,
+                  id: id,
+                  protocol: currentProtocol,
+                },
+                function (res) {
+                  if (res.code === 0) {
+                    layer.msg("清除统计数据成功！");
+                    if (done) done();
+                    return false;
+                  }
+                  layer.alert(res.msg);
+                },
+                "json"
+              );
+            });
+          },
+          deleteRule: (table, chain, id, done) => {
+            let msg =
+              "确认清除 " +
+              table +
+              " 表 " +
+              chain +
+              " 链的第 " +
+              id +
+              " 条规则？";
+            layer.confirm(msg, function () {
+              $.post(
+                "/deleteRule",
+                {
+                  table: table,
+                  chain: chain,
+                  id: id,
+                  protocol: currentProtocol,
+                },
+                function (res) {
+                  if (res.code === 0) {
+                    layer.msg("清除规则成功！");
+                    if (done) done();
+                    return false;
+                  }
+                  layer.alert(res.msg);
+                },
+                "json"
+              );
+            });
+          },
+          getRuleInfo: (table, chain, id, done) => {
+            $.post(
+              "/getRuleInfo",
+              {
+                table: table,
+                chain: chain,
+                id: id,
+                protocol: currentProtocol,
+              },
+              function (res) {
+                if (res.code !== 0) {
+                  layer.alert(res.msg);
+                  return false;
+                }
+                done(res.data);
+              },
+              "json"
+            );
+          },
+          exec: (args, done) => {
+            $.post(
+              "/exec",
+              {
+                args: args,
+                protocol: currentProtocol,
+              },
+              function (res) {
+                if (res.code !== 0) {
+                  layer.alert(res.msg);
+                  return false;
+                }
+
+                if (done) {
+                  done(res);
+                }
+              },
+              "json"
+            );
+          },
+          listExec: (table, chain = "", done) => {
+            $.post(
+              "/listExec",
+              {
+                table: table,
+                chain: chain,
+                protocol: currentProtocol,
+              },
+              function (res) {
+                done(res);
+              },
+              "json"
+            );
+          },
+          export: (table, chain, done) => {
+            $.post(
+              "/export",
+              {
+                table: table,
+                chain: chain,
+                protocol: currentProtocol,
+              },
+              function (res) {
+                if (res.code !== 0) {
+                  layer.alert(res.msg);
+                  return;
+                }
+                done(res.data);
+              },
+              "json"
+            );
+          },
+          import: (rule, done) => {
+            $.post(
+              "/import",
+              {
+                rule: rule,
+                protocol: currentProtocol,
+              },
+              function (res) {
+                if (res.code === 0) {
+                  layer.msg("导入" + currentCommandBinary() + "规则成功！");
+                  if (done) done();
+                  return false;
+                }
+                layer.alert(res.msg);
+              },
+              "json"
+            );
+          },
+          flushEmptyCustomChain: (done) => {
+            layer.confirm("确认清除用户自定义的所有空链？", function () {
+              $.post(
+                "/flushEmptyCustomChain",
+                { protocol: currentProtocol },
+                function (res) {
+                  if (res.code === 0) {
+                    layer.msg("清空自定义空链成功！");
+                    if (done) done();
+                    return false;
+                  }
+                  layer.alert(res.msg);
+                },
+                "json"
+              );
+            });
+          },
         };
 
         function loadListRule(tableName, chainName, isAlert = true) {
-            iptables.listRule(tableName, chainName, function (res) {
-                if (res.code !== 0) {
-                    layer.alert(res.msg)
-                    return false;
+          iptables.listRule(tableName, chainName, function (res) {
+            if (res.code !== 0) {
+              layer.alert(res.msg);
+              return false;
+            }
+            // 全量拉取
+            if (!chainName) {
+              let bodyObj = $("#table-body");
+              bodyObj.html("");
+              if (res.data.system.length > 0) {
+                bodyObj.append(
+                  '<blockquote class="layui-elem-quote" id="system">原生链</blockquote>'
+                );
+                for (k in res.data.system) {
+                  let html = tableHTML("system", tableName, res.data.system[k]);
+                  bodyObj.append(html);
                 }
-                // 全量拉取
-                if (!chainName) {
-                    let bodyObj = $('#table-body');
-                    bodyObj.html('');
-                    if (res.data.system.length > 0) {
-                        bodyObj.append(
-                            '<blockquote class="layui-elem-quote" id="system">原生链</blockquote>')
-                        for (k in res.data.system) {
-                            let html = tableHTML('system', tableName, res.data.system[k])
-                            bodyObj.append(html)
-                        }
-                    }
-                    if (res.data.custom.length > 0) {
-                        bodyObj.append('<hr class="layui-border-blue">')
-                        bodyObj.append(
-                            '<blockquote class="layui-elem-quote" id="custom">自定义链</blockquote>'
-                        )
-                        for (k in res.data.custom) {
-                            let html = tableHTML('custom', tableName, res.data.custom[k])
-                            bodyObj.append(html)
-                        }
-                    }
-                    // 设置目录
-                    $('#dir-list').html(dirHTML(res.data))
-                    return true;
+              }
+              if (res.data.custom.length > 0) {
+                bodyObj.append('<hr class="layui-border-blue">');
+                bodyObj.append(
+                  '<blockquote class="layui-elem-quote" id="custom">自定义链</blockquote>'
+                );
+                for (k in res.data.custom) {
+                  let html = tableHTML("custom", tableName, res.data.custom[k]);
+                  bodyObj.append(html);
                 }
-                // 局部刷新
-                let bodyObj = $('#' + chainName);
-                let type = bodyObj.data('type');
-                bodyObj.html('');
-                if (res.data[type].length === 0 || res.data[type][0].length === 0) {
-                    return false;
-                }
-                // console.log(html)
-                let html = tableHTML(type, tableName, res.data[type][0]);
-                bodyObj.html($(html).html());
-                if (isAlert)
-                    layer.msg('刷新成功');
-            })
+              }
+              // 设置目录
+              $("#dir-list").html(dirHTML(res.data));
+              return true;
+            }
+            // 局部刷新
+            let bodyObj = $("#" + chainName);
+            let type = bodyObj.data("type");
+            bodyObj.html("");
+            if (res.data[type].length === 0 || res.data[type][0].length === 0) {
+              return false;
+            }
+            // console.log(html)
+            let html = tableHTML(type, tableName, res.data[type][0]);
+            bodyObj.html($(html).html());
+            if (isAlert) layer.msg("刷新成功");
+          });
         }
 
-        let tableName = $('.layui-this').html();
-        loadListRule(tableName)
-
+        let tableName = currentTableName();
+        loadListRule(tableName);
 
         //监听Tab切换，以改变地址hash值
-        element.on('tab(tablename)', function () {
-            let tableName = this.getAttribute('id');
-            loadListRule(tableName)
+        element.on("tab(tablename)", function () {
+          let tableName = this.getAttribute("id");
+          loadListRule(tableName);
         });
 
         // 刷新链
-        $(document).on('click', '.chain-reload', function () {
-            let tableName = $(this).parent().data('table');
-            let chainName = $(this).parent().data('chain');
-            loadListRule(tableName, chainName)
-        })
-        $(document).on('click', '.chain-insert', function () {
-            let tableName = $(this).parent().data('table');
-            let chainName = $(this).parent().data('chain');
-            execView('插入规则', 'iptables -t ' + tableName + ' -I ' + chainName, '请输入规则', '', function (
-                val) {
-                iptables.exec("-t " + tableName + ' -I ' + chainName + ' ' + val, function () {
-                    loadListRule(tableName, chainName, false)
-                    layer.msg('插入规则成功！')
-                })
-            })
-        })
-        $(document).on('click', '.chain-append', function () {
-            let tableName = $(this).parent().data('table');
-            let chainName = $(this).parent().data('chain');
-            execView('添加规则', 'iptables -t ' + tableName + ' -A ' + chainName, '请输入规则', '', function (
-                val) {
-                iptables.exec("-t " + tableName + ' -A ' + chainName + ' ' + val, function () {
-                    loadListRule(tableName, chainName, false)
-                    layer.msg('添加规则成功！')
-                })
-            })
+        $(document).on("click", ".chain-reload", function () {
+          let tableName = $(this).parent().data("table");
+          let chainName = $(this).parent().data("chain");
+          loadListRule(tableName, chainName);
+        });
+        $(document).on("click", ".chain-insert", function () {
+          let tableName = $(this).parent().data("table");
+          let chainName = $(this).parent().data("chain");
+          execView(
+            "插入规则",
+            currentCommandBinary() + " -t " + tableName + " -I " + chainName,
+            "请输入规则",
+            "",
+            function (val) {
+              iptables.exec(
+                "-t " + tableName + " -I " + chainName + " " + val,
+                function () {
+                  loadListRule(tableName, chainName, false);
+                  layer.msg("插入规则成功！");
+                }
+              );
+            }
+          );
+        });
+        $(document).on("click", ".chain-append", function () {
+          let tableName = $(this).parent().data("table");
+          let chainName = $(this).parent().data("chain");
+          execView(
+            "添加规则",
+            currentCommandBinary() + " -t " + tableName + " -A " + chainName,
+            "请输入规则",
+            "",
+            function (val) {
+              iptables.exec(
+                "-t " + tableName + " -A " + chainName + " " + val,
+                function () {
+                  loadListRule(tableName, chainName, false);
+                  layer.msg("添加规则成功！");
+                }
+              );
+            }
+          );
         });
 
         // 清空指定表的链规则
-        $(document).on('click', '.chain-flush', function () {
-            let tableName = $(this).parent().data('table');
-            let chainName = $(this).parent().data('chain');
-            iptables.flushRule(tableName, chainName, function () {
-                loadListRule(tableName, chainName, false)
-            })
-        })
-        // 清空指定表的链统计数据
-        $(document).on('click', '.chain-flush-metrics', function () {
-            let tableName = $(this).parent().data('table');
-            let chainName = $(this).parent().data('chain');
-            iptables.flushMetrics(tableName, chainName, '', function () {
-                loadListRule(tableName, chainName, false)
-            })
+        $(document).on("click", ".chain-flush", function () {
+          let tableName = $(this).parent().data("table");
+          let chainName = $(this).parent().data("chain");
+          iptables.flushRule(tableName, chainName, function () {
+            loadListRule(tableName, chainName, false);
+          });
         });
-        $(document).on('click', '.flush-metrics', function () {
-            let tableName = $(this).data('table');
-            let chainName = $(this).data('chain');
-            let id = $(this).data('id');
-            iptables.flushMetrics(tableName, chainName, id, function () {
-                loadListRule(tableName, chainName, false)
-            })
+        // 清空指定表的链统计数据
+        $(document).on("click", ".chain-flush-metrics", function () {
+          let tableName = $(this).parent().data("table");
+          let chainName = $(this).parent().data("chain");
+          iptables.flushMetrics(tableName, chainName, "", function () {
+            loadListRule(tableName, chainName, false);
+          });
+        });
+        $(document).on("click", ".flush-metrics", function () {
+          let tableName = $(this).data("table");
+          let chainName = $(this).data("chain");
+          let id = $(this).data("id");
+          iptables.flushMetrics(tableName, chainName, id, function () {
+            loadListRule(tableName, chainName, false);
+          });
         });
         // 查看原始命令
-        $(document).on('click', '.chain-exec', function () {
-            let tableName = $(this).parent().data('table');
-            let chainName = $(this).parent().data('chain');
-            iptables.listExec(tableName, chainName, function (res) {
-                let html = '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>'
-                layer.alert(html.replace('#code#', res.data), {title: '表: ' + tableName + ' 链: ' + chainName})
-            })
-        })
+        $(document).on("click", ".chain-exec", function () {
+          let tableName = $(this).parent().data("table");
+          let chainName = $(this).parent().data("chain");
+          iptables.listExec(tableName, chainName, function (res) {
+            let html =
+              '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
+            layer.alert(html.replace("#code#", res.data), {
+              title: "表: " + tableName + " 链: " + chainName,
+            });
+          });
+        });
         // 单击修改规则
-        $(document).on('click', 'tbody>tr>td:first-child', function () {
-            let obj = $(this).parent().find('td:last-child button');
-            let tableName = obj.data('table');
-            let chainName = obj.data('chain');
-            let id = obj.data('id');
-            iptables.getRuleInfo(tableName, chainName, id, function (info) {
-                info = info.replace('-A ', '-R ')
-                info = info.replace(chainName, chainName + ' ' + id + ' ')
-                execView('修改 ' + tableName + '表, ' + chainName + '链, 第' + id + '条规则', 'iptables -t ' + tableName, '', info, function (
-                    val) {
-                    iptables.exec("-t " + tableName + ' ' + val, function () {
-                        loadListRule(tableName, chainName, false)
-                        layer.msg('修改规则成功！')
-                    })
-                })
-            })
+        $(document).on("click", "tbody>tr>td:first-child", function () {
+          let obj = $(this).parent().find("td:last-child button");
+          let tableName = obj.data("table");
+          let chainName = obj.data("chain");
+          let id = obj.data("id");
+          iptables.getRuleInfo(tableName, chainName, id, function (info) {
+            info = info.replace("-A ", "-R ");
+            info = info.replace(chainName, chainName + " " + id + " ");
+            execView(
+              "修改 " +
+                tableName +
+                "表, " +
+                chainName +
+                "链, 第" +
+                id +
+                "条规则",
+              "iptables -t " + tableName,
+              "",
+              info,
+              function (val) {
+                iptables.exec("-t " + tableName + " " + val, function () {
+                  loadListRule(tableName, chainName, false);
+                  layer.msg("修改规则成功！");
+                });
+              }
+            );
+          });
         });
         // 清除单条规则
-        $(document).on('click', '.delete-rule', function () {
-            let tableName = $(this).data('table');
-            let chainName = $(this).data('chain');
-            let id = $(this).data('id');
-            iptables.deleteRule(tableName, chainName, id, function () {
-                loadListRule(tableName, chainName, false)
-            })
+        $(document).on("click", ".delete-rule", function () {
+          let tableName = $(this).data("table");
+          let chainName = $(this).data("chain");
+          let id = $(this).data("id");
+          iptables.deleteRule(tableName, chainName, id, function () {
+            loadListRule(tableName, chainName, false);
+          });
         });
         // 清除所有规则
-        $('#clear-all-rule').click(function () {
-            let tableName = $(this).parent().data('table');
-            iptables.flushRule('', '', function () {
-                loadListRule(tableName, '', false)
-            })
-        })
-        // 清除当前表规则
-        $('#clear-current-table-rule').click(function () {
-            let tableName = $('.layui-this').html();
-            iptables.flushRule(tableName, '', function () {
-                loadListRule(tableName, '', false)
-            })
-        })
-
-        $('#export-all-rule').click(function () {
-            iptables.export('', '', function (data) {
-                let html = '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>'
-                // layer.alert(html.replace('#code#', data))
-                html = html.replace('#code#', data)
-                layer.open({
-                    type: 1,
-                    title: '全部规则命令',
-                    btn: ['复制', '导出', '确定'],
-                    content: html,
-                    area: ['auto', '600px'],
-                    btn1: function () {
-                        copyText($, data);
-                        layer.msg('复制成功，可直接粘贴至文件！', {icon: 1});
-                    },
-                    btn2: function () {
-                        fileName = 'iptable-save.txt';
-                        var mimeType = 'text/plain';
-                        let obj = $('#createInvote')
-                        obj.attr('href', 'data:' + mimeType + ';charset=utf-8,' + encodeURIComponent(data));
-                        obj.attr('download', fileName);
-                        document.getElementById('createInvote').click();
-                    },
-                    btn3: function (index) {
-                        layer.close(index)
-                    },
-                })
-            })
+        $("#clear-all-rule").click(function () {
+          let tableName = $(this).parent().data("table");
+          iptables.flushRule("", "", function () {
+            loadListRule(tableName, "", false);
+          });
         });
-        $('#import-all-rule').click(function () {
-            layer.prompt({
-                formType: 2,
-                value: '',
-                maxlength: 1024 * 1024 * 4,
-                title: '粘贴iptables规则',
-                area: ['800px', '350px'] //自定义文本域宽高
-            }, function (value, index, elem) {
-                let tableName = $('.layui-this').html();
-                iptables.import(value, function () {
-                    layer.close(index);
-                    loadListRule(tableName, '', false)
-                })
+        // 清除当前表规则
+        $("#clear-current-table-rule").click(function () {
+          let tableName = currentTableName();
+          iptables.flushRule(tableName, "", function () {
+            loadListRule(tableName, "", false);
+          });
+        });
+
+        $("#export-all-rule").click(function () {
+          iptables.export("", "", function (data) {
+            let html =
+              '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
+            // layer.alert(html.replace('#code#', data))
+            html = html.replace("#code#", data);
+            layer.open({
+              type: 1,
+              title: "全部规则命令",
+              btn: ["复制", "导出", "确定"],
+              content: html,
+              area: ["auto", "600px"],
+              btn1: function () {
+                copyText($, data);
+                layer.msg("复制成功，可直接粘贴至文件！", { icon: 1 });
+              },
+              btn2: function () {
+                fileName = "iptable-save.txt";
+                var mimeType = "text/plain";
+                let obj = $("#createInvote");
+                obj.attr(
+                  "href",
+                  "data:" +
+                    mimeType +
+                    ";charset=utf-8," +
+                    encodeURIComponent(data)
+                );
+                obj.attr("download", fileName);
+                document.getElementById("createInvote").click();
+              },
+              btn3: function (index) {
+                layer.close(index);
+              },
             });
-        })
+          });
+        });
+        $("#import-all-rule").click(function () {
+          layer.prompt(
+            {
+              formType: 2,
+              value: "",
+              maxlength: 1024 * 1024 * 4,
+              title: "粘贴" + currentCommandBinary() + "规则",
+              area: ["800px", "350px"], //自定义文本域宽高
+            },
+            function (value, index, elem) {
+              let tableName = currentTableName();
+              iptables.import(value, function () {
+                layer.close(index);
+                loadListRule(tableName, "", false);
+              });
+            }
+          );
+        });
         // 清零所有链计数
-        $('#clear-all-metrics').click(function () {
-            // let tableName = $(this).parent().data('table');
-            // let chainName = $(this).parent().data('chain');
-            let tableName = $('.layui-this').html();
-            iptables.flushMetrics('', '', '', function () {
-                loadListRule(tableName, '', false)
-            })
-        })
+        $("#clear-all-metrics").click(function () {
+          // let tableName = $(this).parent().data('table');
+          // let chainName = $(this).parent().data('chain');
+          let tableName = currentTableName();
+          iptables.flushMetrics("", "", "", function () {
+            loadListRule(tableName, "", false);
+          });
+        });
         // 清零当前表计数
-        $('#clear-current-table-metrics').click(function () {
-            let tableName = $('.layui-this').html();
-            iptables.flushMetrics(tableName, '', '', function () {
-                loadListRule(tableName, '', false)
-            })
+        $("#clear-current-table-metrics").click(function () {
+          let tableName = currentTableName();
+          iptables.flushMetrics(tableName, "", "", function () {
+            loadListRule(tableName, "", false);
+          });
         });
         // 清空自定义空链
-        $('#clear-all-empty-chain').click(function () {
-            let tableName = $('.layui-this').html();
-            iptables.flushEmptyCustomChain(function () {
-                loadListRule(tableName, '', false)
-            })
+        $("#clear-all-empty-chain").click(function () {
+          let tableName = currentTableName();
+          iptables.flushEmptyCustomChain(function () {
+            loadListRule(tableName, "", false);
+          });
         });
-        $('#exec-iptables').click(function () {
-            let tableName = $('.layui-this').html();
-            execView('执行iptables命令', 'iptables', '输入命令', '', function (val) {
-                iptables.exec(val, function (res) {
-                    // loadListRule(tableName, '', false)
-                    if (res.data) {
-                        let html = '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>'
-                        layer.alert(html.replace('#code#', res.data), {title: '命令执行成功'})
-                    } else {
-                        layer.msg('命令执行成功')
-                    }
-                })
-            })
-        })
-        $('#self-iptables').click(function () {
-            let tableName = $('.layui-this').html();
-            iptables.listExec(tableName, '', function (res) {
-                let html = '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>'
-                layer.alert(html.replace('#code#', res.data), {title: '表: ' + tableName})
-            })
-        })
-    });
+        $("#exec-iptables").click(function () {
+          let tableName = currentTableName();
+          execView(
+            "执行" + currentCommandBinary() + "命令",
+            currentCommandBinary(),
+            "输入命令",
+            "",
+            function (val) {
+              iptables.exec(val, function (res) {
+                // loadListRule(tableName, '', false)
+                if (res.data) {
+                  let html =
+                    '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
+                  layer.alert(html.replace("#code#", res.data), {
+                    title: "命令执行成功",
+                  });
+                } else {
+                  layer.msg("命令执行成功");
+                }
+              });
+            }
+          );
+        });
+        $("#self-iptables").click(function () {
+          let tableName = currentTableName();
+          iptables.listExec(tableName, "", function (res) {
+            let html =
+              '<pre class="layui-code" lay-title="shell" lay-height="" lay-skin="" lay-encode="">#code#</pre>';
+            layer.alert(html.replace("#code#", res.data), {
+              title: currentCommandBinary() + " 表: " + tableName,
+            });
+          });
+        });
+      });
 
-
-    let template = `
+      let template = `
 <fieldset class="layui-elem-field" id="#chain-name#" data-type="#type#">
   <legend style="font-size: 16px;">#title#</legend>
   <div class="layui-field-box">
@@ -685,115 +888,151 @@
                     </tbody>
                 </table>
             </div>
-        </fieldset>`
+        </fieldset>`;
 
-    function tableHTML(type, tableName, data) {
+      function tableHTML(type, tableName, data) {
         let html = template;
-        let title = '';
+        let title = "";
         switch (type) {
-            case 'system':
-                title = "链: " + data.title.chain + " &nbsp;默认策略: " + data.title.policy + " &nbsp;经过的包数量: " + data
-                    .title.packets + " &nbsp;字节数: " + data.title.bytes
-                break;
-            case 'custom':
-                title = "链: " + data.title.chain + " &nbsp;被引用数量: " + data.title.references
-                break;
-
+          case "system":
+            title =
+              "链: " +
+              data.title.chain +
+              " &nbsp;默认策略: " +
+              data.title.policy +
+              " &nbsp;经过的包数量: " +
+              data.title.packets +
+              " &nbsp;字节数: " +
+              data.title.bytes;
+            break;
+          case "custom":
+            title =
+              "链: " +
+              data.title.chain +
+              " &nbsp;被引用数量: " +
+              data.title.references;
+            break;
         }
-        let td = '';
+        let td = "";
         for (k in data.list) {
-            td += "<tr>";
-            td += "<td style='color: #1E9FFF;text-decoration: underline;'>" + data.list[k].num + "</td>";
-            td += "<td>" + data.list[k].pkts + "</td>";
-            td += "<td>" + data.list[k].bytes + "</td>";
-            td += "<td>" + data.list[k].target + "</td>";
-            td += "<td>" + data.list[k].prot + "</td>";
-            td += "<td>" + data.list[k].opt + "</td>";
-            td += "<td>" + data.list[k].in + "</td>";
-            td += "<td>" + data.list[k].out + "</td>";
-            td += "<td>" + data.list[k].source + "</td>";
-            td += "<td>" + data.list[k].destination + "</td>";
-            td += "<td>" + data.list[k].action + "</td>";
-            td += "<td><div class='layui-btn-group'>" +
-                "<button class='layui-btn layui-btn-xs layui-btn-primary flush-metrics' data-table='" + tableName + "' data-chain='" + data.title.chain + "' data-id='" + data.list[k].num + "'>清零</button>" +
-                " <button class='layui-btn layui-btn-xs layui-btn-primary delete-rule' data-table='" + tableName + "' data-chain='" + data.title.chain + "' data-id='" + data.list[k].num + "'>删除</button>" +
-                "</div></td>";
-            td += "</tr>";
+          td += "<tr>";
+          td +=
+            "<td style='color: #1E9FFF;text-decoration: underline;'>" +
+            data.list[k].num +
+            "</td>";
+          td += "<td>" + data.list[k].pkts + "</td>";
+          td += "<td>" + data.list[k].bytes + "</td>";
+          td += "<td>" + data.list[k].target + "</td>";
+          td += "<td>" + data.list[k].prot + "</td>";
+          td += "<td>" + data.list[k].opt + "</td>";
+          td += "<td>" + data.list[k].in + "</td>";
+          td += "<td>" + data.list[k].out + "</td>";
+          td += "<td>" + data.list[k].source + "</td>";
+          td += "<td>" + data.list[k].destination + "</td>";
+          td += "<td>" + data.list[k].action + "</td>";
+          td +=
+            "<td><div class='layui-btn-group'>" +
+            "<button class='layui-btn layui-btn-xs layui-btn-primary flush-metrics' data-table='" +
+            tableName +
+            "' data-chain='" +
+            data.title.chain +
+            "' data-id='" +
+            data.list[k].num +
+            "'>清零</button>" +
+            " <button class='layui-btn layui-btn-xs layui-btn-primary delete-rule' data-table='" +
+            tableName +
+            "' data-chain='" +
+            data.title.chain +
+            "' data-id='" +
+            data.list[k].num +
+            "'>删除</button>" +
+            "</div></td>";
+          td += "</tr>";
         }
-        html = html.replace('#title#', title)
-        html = html.replace('#type#', type)
-        html = html.replaceAll('#table-name#', tableName)
-        html = html.replaceAll('#chain-name#', data.title.chain)
-        return html.replace('#td#', td)
-    }
+        html = html.replace("#title#", title);
+        html = html.replace("#type#", type);
+        html = html.replaceAll("#table-name#", tableName);
+        html = html.replaceAll("#chain-name#", data.title.chain);
+        return html.replace("#td#", td);
+      }
 
-    function dirHTML(data) {
-        let html = '';
+      function dirHTML(data) {
+        let html = "";
         if (data.system.length > 0) {
-            html += '<li><a href="#system"><cite>原生链</cite></a></li><ul style="margin-left: 15px;">'
-            for (k in data.system) {
-                let name = data.system[k].title.chain;
-                html += '<li><a href="#' + name + '"><cite>' + name + '</cite></a></li>'
-            }
-            html += '</ul>'
+          html +=
+            '<li><a href="#system"><cite>原生链</cite></a></li><ul style="margin-left: 15px;">';
+          for (k in data.system) {
+            let name = data.system[k].title.chain;
+            html +=
+              '<li><a href="#' + name + '"><cite>' + name + "</cite></a></li>";
+          }
+          html += "</ul>";
         }
         if (data.custom.length > 0) {
-            html += '<li><a href="#custom"><cite>自定义链</cite></a></li><ul style="margin-left: 15px;">'
-            for (k in data.custom) {
-                let name = data.custom[k].title.chain;
-                html += '<li><a href="#' + name + '"><cite>' + name + '</cite></a></li>'
-            }
-            html += '</ul>'
+          html +=
+            '<li><a href="#custom"><cite>自定义链</cite></a></li><ul style="margin-left: 15px;">';
+          for (k in data.custom) {
+            let name = data.custom[k].title.chain;
+            html +=
+              '<li><a href="#' + name + '"><cite>' + name + "</cite></a></li>";
+          }
+          html += "</ul>";
         }
         return html;
-    }
+      }
 
-    /**
-     * 执行命令的界面
-     * @param title string 页面标题
-     * @param prefix string 输入框命令前缀
-     * @param placeholder string 输入框命令提示
-     * @param val string 输入框命令
-     * @param confirm function 命令完成回调
-     */
-    function execView(title, prefix, placeholder, val, confirm) {
+      /**
+       * 执行命令的界面
+       * @param title string 页面标题
+       * @param prefix string 输入框命令前缀
+       * @param placeholder string 输入框命令提示
+       * @param val string 输入框命令
+       * @param confirm function 命令完成回调
+       */
+      function execView(title, prefix, placeholder, val, confirm) {
         layer.open({
-            id: 1,
-            type: 1,
-            title: title,
-            skin: 'layui-layer-rim',
-            area: ['60%', 'auto'],
-            content: ' <div class="row" style="width: 95%;   margin-top:10px;">' +
-                '<div class="layui-form-item">' +
-                '<label class="layui-form-label" style="width: 30%">' + prefix + '</label>' +
-                '<div class="layui-input-block">' +
-                '<input type="text" name="title" style="width: 70%" required  lay-verify="required" placeholder="' +
-                placeholder + '" autocomplete="off" class="layui-input" value="' + val + '">' +
-                '</div>' +
-                '</div>' +
-                '</div>',
-            btn: ['确认', '取消'],
-            btn1: function (index, layero) {
-                confirm(layero.find('input').val());
-                layer.close(index);
-            },
-            btn2: function (index, layero) {
-                layer.close(index);
-            }
+          id: 1,
+          type: 1,
+          title: title,
+          skin: "layui-layer-rim",
+          area: ["60%", "auto"],
+          content:
+            ' <div class="row" style="width: 95%;   margin-top:10px;">' +
+            '<div class="layui-form-item">' +
+            '<label class="layui-form-label" style="width: 30%">' +
+            prefix +
+            "</label>" +
+            '<div class="layui-input-block">' +
+            '<input type="text" name="title" style="width: 70%" required  lay-verify="required" placeholder="' +
+            placeholder +
+            '" autocomplete="off" class="layui-input" value="' +
+            val +
+            '">' +
+            "</div>" +
+            "</div>" +
+            "</div>",
+          btn: ["确认", "取消"],
+          btn1: function (index, layero) {
+            confirm(layero.find("input").val());
+            layer.close(index);
+          },
+          btn2: function (index, layero) {
+            layer.close(index);
+          },
         });
-    }
+      }
 
-    /**
-     * 将文本内容复制到剪切板
-     * @param str 复制内容
-     */
-    function copyText(jq, str) {
-        jq('#copy').text(str).show();
+      /**
+       * 将文本内容复制到剪切板
+       * @param str 复制内容
+       */
+      function copyText(jq, str) {
+        jq("#copy").text(str).show();
         var ele = document.getElementById("copy");
         ele.select();
-        document.execCommand('copy', false, null);
-        jq('#copy').hide();
-    }
-</script>
-</body>
+        document.execCommand("copy", false, null);
+        jq("#copy").hide();
+      }
+    </script>
+  </body>
 </html>

@@ -21,9 +21,7 @@ package iptables
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -50,24 +48,43 @@ type IptablesV4CMD struct {
 
 type option func(*IptablesV4CMD)
 
-func NewIPV4(opt ...option) (*IptablesV4CMD, error) {
-	ipc := &IptablesV4CMD{}
+func newIptablesCommand(defaultProtocol Protocol, opt ...option) (*IptablesV4CMD, error) {
+	ipc := &IptablesV4CMD{
+		protocol: defaultProtocol,
+	}
 	for _, fn := range opt {
 		fn(ipc)
 	}
-	if ipc.protocol == ProtocolIPv6 {
-		return nil, errors.New("IPv6 is not supported temporarily")
-	}
-	if len(ipc.binary) == 0 {
-		ipc.binary = "iptables"
-	}
-	if len(ipc.saveBinary) == 0 {
-		ipc.saveBinary = "iptables-save"
-	}
-	if len(ipc.restoreBinary) == 0 {
-		ipc.restoreBinary = "iptables-restore"
+
+	switch ipc.protocol {
+	case ProtocolIPv4:
+		if len(ipc.binary) == 0 {
+			ipc.binary = "iptables"
+		}
+		if len(ipc.saveBinary) == 0 {
+			ipc.saveBinary = "iptables-save"
+		}
+		if len(ipc.restoreBinary) == 0 {
+			ipc.restoreBinary = "iptables-restore"
+		}
+	case ProtocolIPv6:
+		if len(ipc.binary) == 0 {
+			ipc.binary = "ip6tables"
+		}
+		if len(ipc.saveBinary) == 0 {
+			ipc.saveBinary = "ip6tables-save"
+		}
+		if len(ipc.restoreBinary) == 0 {
+			ipc.restoreBinary = "ip6tables-restore"
+		}
+	default:
+		return nil, fmt.Errorf("unsupported protocol: %d", ipc.protocol)
 	}
 	return ipc, nil
+}
+
+func NewIPV4(opt ...option) (*IptablesV4CMD, error) {
+	return newIptablesCommand(ProtocolIPv4, opt...)
 }
 
 func WithProtocol(protocol Protocol) option {
@@ -155,55 +172,63 @@ func (i *IptablesV4CMD) ListRule(table, chain string) (map[string][]TableList, e
 }
 
 func (i *IptablesV4CMD) FlushRule(table, chain string) error {
-	var err error
 	if len(table) == 0 && len(chain) == 0 {
-		_, err = i.iptables("-t", "raw", "-F")
-		_, err = i.iptables("-t", "mangle", "-F")
-		_, err = i.iptables("-t", "nat", "-F")
-		_, err = i.iptables("-t", "filter", "-F")
-		return err
+		var firstErr error
+		for _, tbl := range []string{"raw", "mangle", "nat", "filter"} {
+			if _, err := i.iptables("-t", tbl, "-F"); err != nil {
+				log.Printf("FlushRule table=%s err=%v", tbl, err)
+				if firstErr == nil {
+					firstErr = err
+				}
+			}
+		}
+		return firstErr
 	}
 
 	if len(table) == 0 {
 		table = "filter"
 	}
 	if len(chain) == 0 {
-		_, err = i.iptables("-t", table, "-F")
+		_, err := i.iptables("-t", table, "-F")
+		return err
 	} else {
-		_, err = i.iptables("-t", table, "-F", chain)
+		_, err := i.iptables("-t", table, "-F", chain)
+		return err
 	}
-
-	return err
 }
 
 func (i *IptablesV4CMD) FlushMetrics(table, chain, id string) error {
-	var err error
 	if len(id) > 0 {
 		if len(table) == 0 || len(chain) == 0 {
 			return fmt.Errorf("FlushMetrics args error. table:%s chain:%s id:%s", table, chain, id)
 		}
-		_, err = i.iptables("-t", table, "-Z", chain, id)
+		_, err := i.iptables("-t", table, "-Z", chain, id)
 		return err
 	}
 
 	if len(table) == 0 && len(chain) == 0 {
-		_, err = i.iptables("-t", "raw", "-Z")
-		_, err = i.iptables("-t", "mangle", "-Z")
-		_, err = i.iptables("-t", "nat", "-Z")
-		_, err = i.iptables("-t", "filter", "-Z")
-		return err
+		var firstErr error
+		for _, tbl := range []string{"raw", "mangle", "nat", "filter"} {
+			if _, err := i.iptables("-t", tbl, "-Z"); err != nil {
+				log.Printf("FlushMetrics table=%s err=%v", tbl, err)
+				if firstErr == nil {
+					firstErr = err
+				}
+			}
+		}
+		return firstErr
 	}
 
 	if len(table) == 0 {
 		table = "filter"
 	}
 	if len(chain) == 0 {
-		_, err = i.iptables("-t", table, "-Z")
+		_, err := i.iptables("-t", table, "-Z")
+		return err
 	} else {
-		_, err = i.iptables("-t", table, "-Z", chain)
+		_, err := i.iptables("-t", table, "-Z", chain)
+		return err
 	}
-
-	return err
 }
 
 func (i *IptablesV4CMD) DeleteRule(table, chain, id string) error {
@@ -215,18 +240,29 @@ func (i *IptablesV4CMD) DeleteRule(table, chain, id string) error {
 }
 
 func (i *IptablesV4CMD) ListExec(table, chain string) (string, error) {
-	var str string
-	var err error
-	if len(chain) == 0 {
-		str, err = i.iptablesSave("-t", table)
-	} else {
-		// chain不用去除空格，显示引用命令
-		str, err = i.iptablesSave("-t", table, "|", "grep", chain)
+	if len(table) == 0 {
+		table = "filter"
 	}
+
+	str, err := i.iptablesSave("-t", table)
 	if err != nil {
 		log.Println("ListExec:", err)
+		return "", err
 	}
-	return str, err
+
+	if len(chain) == 0 {
+		return str, nil
+	}
+
+	search := fmt.Sprintf(" %s ", chain)
+	lines := utils.SplitAndTrimSpace(str, "\n")
+	filtered := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if strings.Contains(line, search) {
+			filtered = append(filtered, line)
+		}
+	}
+	return strings.Join(filtered, "\n"), nil
 }
 
 func (i *IptablesV4CMD) Exec(param ...string) (string, error) {
@@ -245,12 +281,18 @@ func (i *IptablesV4CMD) GetRuleInfo(table, chain, id string) (string, error) {
 	if len(table) == 0 || len(chain) == 0 || len(id) == 0 {
 		return "", fmt.Errorf("GetRuleInfo args error. table:%s chain:%s id:%s", table, chain, id)
 	}
-	// s, err := i.iptablesSave(fmt.Sprintf("-t %s | grep %s", table, " "+chain+" "))
-	s, err := i.iptablesSave(fmt.Sprintf("-t %s | grep ' %s '", table, chain))
+	s, err := i.iptablesSave("-t", table)
 	if err != nil {
 		return "", err
 	}
-	list := utils.SplitAndTrimSpace(s, "\n")
+	search := fmt.Sprintf(" %s ", chain)
+	lines := utils.SplitAndTrimSpace(s, "\n")
+	list := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if strings.Contains(line, search) {
+			list = append(list, line)
+		}
+	}
 	idint, _ := strconv.Atoi(id)
 	if len(list) < idint {
 		return "", fmt.Errorf("GetRuleInfo rule not found. table:%s chain:%s id:%s", table, chain, id)
@@ -259,11 +301,16 @@ func (i *IptablesV4CMD) GetRuleInfo(table, chain, id string) (string, error) {
 }
 
 func (i *IptablesV4CMD) FlushEmptyCustomChain() error {
-	_, err := i.iptables("-t", "raw", "-X")
-	_, err = i.iptables("-t", "mangle", "-X")
-	_, err = i.iptables("-t", "nat", "-X")
-	_, err = i.iptables("-t", "filter", "-X")
-	return err
+	var firstErr error
+	for _, tbl := range []string{"raw", "mangle", "nat", "filter"} {
+		if _, err := i.iptables("-t", tbl, "-X"); err != nil {
+			log.Printf("FlushEmptyCustomChain table=%s err=%v", tbl, err)
+			if firstErr == nil {
+				firstErr = err
+			}
+		}
+	}
+	return firstErr
 }
 
 func (i *IptablesV4CMD) Export(table, chain string) (string, error) {
@@ -281,13 +328,24 @@ func (i *IptablesV4CMD) Import(rule string) error {
 	if len(rule) == 0 {
 		return nil
 	}
-	fileName := "/tmp/iptable.rule"
-	err := os.WriteFile(fileName, []byte(rule), fs.ModePerm)
+	tmpFile, err := os.CreateTemp("", "iptables-rule-*.tmp")
 	if err != nil {
 		return fmt.Errorf("Import rule error. err:%v", err)
 	}
-	defer os.Remove(fileName)
-	_, err = i.iptablesRestore(fileName)
+	defer func() {
+		tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
+	if err := tmpFile.Chmod(0600); err != nil {
+		return fmt.Errorf("Import rule chmod error. err:%v", err)
+	}
+	if _, err := tmpFile.WriteString(rule); err != nil {
+		return fmt.Errorf("Import rule write error. err:%v", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("Import rule close error. err:%v", err)
+	}
+	_, err = i.iptablesRestore(tmpFile.Name())
 	return err
 }
 
@@ -305,26 +363,26 @@ func (i *IptablesV4CMD) iptables(args ...string) (string, error) {
 
 func (i *IptablesV4CMD) iptablesSave(args ...string) (string, error) {
 	var outBuf, errBuf bytes.Buffer
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("%s %s", i.saveBinary, strings.Join(args, " ")))
+	cmd := exec.Command(i.saveBinary, args...)
 	cmd.Stdout = &outBuf
 	cmd.Stderr = &errBuf
 	err := cmd.Run()
 	if err != nil {
 		log.Println(err)
-		return "", fmt.Errorf("exec: [sh -c %s] err: %s", fmt.Sprintf("%s %s", i.saveBinary, strings.Join(args, " ")), errBuf.String())
+		return "", fmt.Errorf("exec: [%s %s] err: %s", i.saveBinary, strings.Join(args, " "), errBuf.String())
 	}
 	return strings.TrimSpace(outBuf.String()), nil
 }
 
 func (i *IptablesV4CMD) iptablesRestore(fileName string) (string, error) {
 	var outBuf, errBuf bytes.Buffer
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("%s < %s", i.restoreBinary, fileName))
+	cmd := exec.Command(i.restoreBinary, fileName)
 	cmd.Stdout = &outBuf
 	cmd.Stderr = &errBuf
 	err := cmd.Run()
 	if err != nil {
 		log.Println(err)
-		return "", fmt.Errorf("exec: [%s < %s] err: %s", i.restoreBinary, fileName, errBuf.String())
+		return "", fmt.Errorf("exec: [%s %s] err: %s", i.restoreBinary, fileName, errBuf.String())
 	}
 	return strings.TrimSpace(outBuf.String()), nil
 }
