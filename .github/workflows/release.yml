@@ -1,0 +1,37 @@
+name: Build Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build binary and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build binary via Makefile
+        run: |
+          make release
+          mv iptables-server iptables-server-${{ github.ref_name }}-linux-amd64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iptables-server-${{ github.ref_name }}
+          path: iptables-server-${{ github.ref_name }}-linux-amd64
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: iptables-server-${{ github.ref_name }}-linux-amd64
+          generate_release_notes: true
